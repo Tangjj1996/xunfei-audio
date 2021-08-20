@@ -1,0 +1,13 @@
+{
+  "name": "xunfei-audio",
+  "version": "1.0.0",
+  "main": "build/main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p",
+    "start": "yarn build && node build/main.js"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5"
+  }
+}
