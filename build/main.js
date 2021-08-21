@@ -43,8 +43,33 @@ const createSign = (ts) => {
     let sign = crypto.enc.Base64.stringify(sha1);
     return sign;
 };
+class SliceIdGenerator {
+    __ch;
+    constructor(__ch = "") {
+        this.__ch = __ch;
+        this.__ch = "aaaaaaaaa`";
+    }
+    getNextSliceId() {
+        let ch = this.__ch;
+        let i = ch.length - 1;
+        while (i >= 0) {
+            let ci = ch[i];
+            if (ci !== "z") {
+                ch = ch.slice(0, i) + String.fromCharCode(ci.charCodeAt(0) + 1) + ch.slice(i + 1);
+                break;
+            }
+            else {
+                ch = ch.slice(0, i) + "a" + ch.slice(i + 1);
+                i--;
+            }
+        }
+        this.__ch = ch;
+        return this.__ch;
+    }
+}
 try {
-    const res = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
+    // prepare interface
+    const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
         "Content-Type": "application/x-www-form-urlencoded",
         charset: "UTF-8",
         Host: "raasr.xfyun.cn",
@@ -56,7 +81,19 @@ try {
         file_name: "1.wav",
         slice_num: 1,
     });
-    console.log(res);
+    if (prepareRes.ok === 0) {
+        // upload interface
+        const uploadRes = await PostRequestData("https://raasr.xfyun.cn/api/upload", {
+            "Content-Type": "multipart/form-data",
+        }, {
+            app_id: APP_ID,
+            signa: createSign(CURRENT_TIME),
+            ts: CURRENT_TIME,
+            task_id: prepareRes.data,
+            slice_id: new SliceIdGenerator().getNextSliceId(),
+            content: "hhhhs",
+        });
+    }
 }
 catch (_) {
     console.error("[PostRequestData]::net Error", _);
