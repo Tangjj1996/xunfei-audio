@@ -1,8 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const http = require("http");
-const crypto = require("crypto-js");
-const constance_1 = require("./constance");
+import http from "http";
+import crypto from "crypto-js";
+import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
         const req = http
@@ -35,28 +33,26 @@ const PostRequestData = (path, headers, data) => {
     });
 };
 const createSign = (ts) => {
-    let md5 = crypto.MD5(constance_1.APP_ID + ts).toString();
-    let sha1 = crypto.HmacSHA1(md5, constance_1.SECRET_key);
+    let md5 = crypto.MD5(APP_ID + ts).toString();
+    let sha1 = crypto.HmacSHA1(md5, SECRET_key);
     let sign = crypto.enc.Base64.stringify(sha1);
     return sign;
 };
-(async () => {
-    try {
-        const res = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
-            "Content-Type": "application/x-www-form-urlencoded",
-            charset: "UTF-8",
-            Host: "raasr.xfyun.cn",
-        }, {
-            app_id: constance_1.APP_ID,
-            signa: createSign(constance_1.CURRENT_TIME),
-            ts: constance_1.CURRENT_TIME,
-            file_len: 1 << 10,
-            file_name: "1.wav",
-            slice_num: 1,
-        });
-        console.log(res);
-    }
-    catch (_) {
-        console.error("[PostRequestData]::net Error", _);
-    }
-})();
+try {
+    const res = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
+        "Content-Type": "application/x-www-form-urlencoded",
+        charset: "UTF-8",
+        Host: "raasr.xfyun.cn",
+    }, {
+        app_id: APP_ID,
+        signa: createSign(CURRENT_TIME),
+        ts: CURRENT_TIME,
+        file_len: 1 << 10,
+        file_name: "1.wav",
+        slice_num: 1,
+    });
+    console.log(res);
+}
+catch (_) {
+    console.error("[PostRequestData]::net Error", _);
+}

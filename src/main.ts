@@ -8,8 +8,8 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import * as http from "http";
-import * as crypto from "crypto-js";
+import http from "http";
+import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
 
 const PostRequestData = <
@@ -61,26 +61,24 @@ const createSign = (ts: number): string => {
     return sign;
 };
 
-(async () => {
-    try {
-        const res = await PostRequestData(
-            "https://raasr.xfyun.cn/api/prepare",
-            {
-                "Content-Type": "application/x-www-form-urlencoded",
-                charset: "UTF-8",
-                Host: "raasr.xfyun.cn",
-            },
-            {
-                app_id: APP_ID,
-                signa: createSign(CURRENT_TIME),
-                ts: CURRENT_TIME,
-                file_len: 1 << 10,
-                file_name: "1.wav",
-                slice_num: 1,
-            }
-        );
-        console.log(res);
-    } catch (_) {
-        console.error("[PostRequestData]::net Error", _);
-    }
-})();
+try {
+    const res = await PostRequestData(
+        "https://raasr.xfyun.cn/api/prepare",
+        {
+            "Content-Type": "application/x-www-form-urlencoded",
+            charset: "UTF-8",
+            Host: "raasr.xfyun.cn",
+        },
+        {
+            app_id: APP_ID,
+            signa: createSign(CURRENT_TIME),
+            ts: CURRENT_TIME,
+            file_len: 1 << 10,
+            file_name: "1.wav",
+            slice_num: 1,
+        }
+    );
+    console.log(res);
+} catch (_) {
+    console.error("[PostRequestData]::net Error", _);
+}
