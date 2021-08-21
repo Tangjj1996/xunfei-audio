@@ -52,7 +52,7 @@ export type PrepareOptions = {
      * 当前时间戳，从1970年1月1日0点0分0秒开始到现在的秒数
      * @example 1512041814
      */
-    ts: string;
+    ts: number;
     /**
      * 文件大小（单位：字节）
      * @example 160044
