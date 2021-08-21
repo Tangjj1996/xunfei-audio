@@ -1,6 +1,7 @@
 import http from "http";
 import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
+import url from "url";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
         const req = http
@@ -28,7 +29,11 @@ const PostRequestData = (path, headers, data) => {
             .on("error", (err) => {
             reject(err);
         });
-        req.write(JSON.stringify(data));
+        const params = new url.URLSearchParams();
+        for (let key in data) {
+            params.append(key, String(data[key]));
+        }
+        req.write(params.toString());
         req.end();
     });
 };
@@ -46,8 +51,8 @@ try {
     }, {
         app_id: APP_ID,
         signa: createSign(CURRENT_TIME),
-        ts: String(CURRENT_TIME),
-        file_len: String(1 << 10),
+        ts: CURRENT_TIME,
+        file_len: 1 << 10,
         file_name: "1.wav",
         slice_num: 1,
     });

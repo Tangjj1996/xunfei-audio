@@ -19,7 +19,7 @@ type BaseOptions = {
      * 时间戳
      * @example 1512041814
      */
-    ts: string;
+    ts: number;
     /**
      * 任务ID（预处理接口返回值)
      * @example 4b705edda27a4140b31b462df0033cfa
@@ -52,12 +52,12 @@ export type PrepareOptions = {
      * 当前时间戳，从1970年1月1日0点0分0秒开始到现在的秒数
      * @example 1512041814
      */
-    ts: string;
+    ts: number;
     /**
      * 文件大小（单位：字节）
      * @example 160044
      */
-    file_len: string;
+    file_len: number;
     /**
      * 文件名称（带后缀）
      * @example lfasr_audio.wav
