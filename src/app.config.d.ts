@@ -52,12 +52,12 @@ export type PrepareOptions = {
      * 当前时间戳，从1970年1月1日0点0分0秒开始到现在的秒数
      * @example 1512041814
      */
-    ts: number;
+    ts: string;
     /**
      * 文件大小（单位：字节）
      * @example 160044
      */
-    file_len: number;
+    file_len: string;
     /**
      * 文件名称（带后缀）
      * @example lfasr_audio.wav

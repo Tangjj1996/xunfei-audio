@@ -72,8 +72,8 @@ try {
         {
             app_id: APP_ID,
             signa: createSign(CURRENT_TIME),
-            ts: CURRENT_TIME,
-            file_len: 1 << 10,
+            ts: String(CURRENT_TIME),
+            file_len: String(1 << 10),
             file_name: "1.wav",
             slice_num: 1,
         }
