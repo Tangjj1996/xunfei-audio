@@ -8,7 +8,7 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import * as https from "https";
+import * as http from "http";
 
 const PostRequestData = <
     T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
@@ -18,14 +18,15 @@ const PostRequestData = <
     data: PostDataParam<T>
 ) => {
     return new Promise<SuccessResponse | FailedResponse>((resolve, reject) => {
-        const req = https
+        const req = http
             .request(
                 path,
                 {
                     method: "post",
                     headers,
+                    protocol: "http:",
                     hostname: "127.0.0.1",
-                    port: 8866,
+                    port: "8866",
                 },
                 (res) => {
                     let data = "";
@@ -57,6 +58,7 @@ try {
         {
             "Content-Type": "application/x-www-form-urlencoded",
             charset: "UTF-8",
+            Host: "raasr.xfyun.cn",
         },
         {
             app_id: "41ac2892",

@@ -1,12 +1,13 @@
-import * as https from "https";
+import * as http from "http";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
-        const req = https
+        const req = http
             .request(path, {
             method: "post",
             headers,
+            protocol: "http:",
             hostname: "127.0.0.1",
-            port: 8866,
+            port: "8866",
         }, (res) => {
             let data = "";
             res.on("data", (chunk) => {
@@ -33,6 +34,7 @@ try {
     const res = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
         "Content-Type": "application/x-www-form-urlencoded",
         charset: "UTF-8",
+        Host: "raasr.xfyun.cn",
     }, {
         app_id: "41ac2892",
         signa: "",
