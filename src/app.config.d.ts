@@ -57,7 +57,7 @@ export type PrepareOptions = {
      * 文件大小（单位：字节）
      * @example 160044
      */
-    file_len: string;
+    file_len: number;
     /**
      * 文件名称（带后缀）
      * @example lfasr_audio.wav
@@ -171,4 +171,16 @@ export type MergeOptions = {} & BaseOptions;
 
 export type GetProgressOptions = {} & BaseOptions;
 
-export type GetReusltOptions = {} & BaseOptions;
+export type GetResultOptions = {} & BaseOptions;
+
+export type PostDataParam<T> = T extends PrepareFetchUrl
+    ? PrepareOptions
+    : T extends UploadFetchUrl
+    ? UploadOptions
+    : T extends MergeFetchUrl
+    ? MergeOptions
+    : T extends GetProgressFetchUrl
+    ? GetProgressOptions
+    : T extends GetResultFetchUrl
+    ? GetResultOptions
+    : never;
