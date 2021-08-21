@@ -10,6 +10,7 @@ import {
 } from "./app.config";
 import * as http from "http";
 import * as crypto from "crypto-js";
+import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
 
 const PostRequestData = <
     T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
@@ -53,9 +54,6 @@ const PostRequestData = <
     });
 };
 
-const CURRENT_TIME = Date.now();
-const APP_ID = "41ac2892";
-const SECRET_key = "476dbac45bca3f32bba334f702e3bc4f";
 const createSign = (ts: number): string => {
     let md5 = crypto.MD5(APP_ID + ts).toString();
     let sha1 = crypto.HmacSHA1(md5, SECRET_key);
@@ -63,24 +61,26 @@ const createSign = (ts: number): string => {
     return sign;
 };
 
-try {
-    const res = await PostRequestData(
-        "https://raasr.xfyun.cn/api/prepare",
-        {
-            "Content-Type": "application/x-www-form-urlencoded",
-            charset: "UTF-8",
-            Host: "raasr.xfyun.cn",
-        },
-        {
-            app_id: APP_ID,
-            signa: createSign(CURRENT_TIME),
-            ts: CURRENT_TIME,
-            file_len: 1 << 10,
-            file_name: "1.ts",
-            slice_num: 1,
-        }
-    );
-    console.log(res);
-} catch (_) {
-    console.error("[PostRequestData]::net Error", _);
-}
+(async () => {
+    try {
+        const res = await PostRequestData(
+            "https://raasr.xfyun.cn/api/prepare",
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+                charset: "UTF-8",
+                Host: "raasr.xfyun.cn",
+            },
+            {
+                app_id: APP_ID,
+                signa: createSign(CURRENT_TIME),
+                ts: CURRENT_TIME,
+                file_len: 1 << 10,
+                file_name: "1.wav",
+                slice_num: 1,
+            }
+        );
+        console.log(res);
+    } catch (_) {
+        console.error("[PostRequestData]::net Error", _);
+    }
+})();
