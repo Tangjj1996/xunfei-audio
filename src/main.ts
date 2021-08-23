@@ -9,8 +9,9 @@ import {
     UploadFetchUrl,
 } from "./app.config";
 import http from "http";
+import https from "https";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
+import { CURRENT_TIME, APP_ID, SECRET_key, SET_PROXY } from "./constance";
 import url from "url";
 
 const PostRequestData = <
@@ -21,39 +22,74 @@ const PostRequestData = <
     data: PostDataParam<T>
 ) => {
     return new Promise<SuccessResponse | FailedResponse>((resolve, reject) => {
-        const req = http
-            .request(
-                path,
-                {
-                    method: "post",
-                    headers,
-                    protocol: "http:",
-                    hostname: "127.0.0.1",
-                    port: "8866",
-                },
-                (res) => {
-                    let data = "";
-                    res.on("data", (chunk) => {
-                        data += chunk;
-                    });
+        const reqHttp = () =>
+            http
+                .request(
+                    {
+                        path,
+                        method: "post",
+                        headers: {
+                            Host: "raasr.xfyun.cn",
+                            ...headers,
+                        },
+                        protocol: "http:",
+                        host: "127.0.0.1",
+                        port: 8866,
+                    },
+                    (res) => {
+                        let data = "";
+                        res.on("data", (chunk) => {
+                            data += chunk;
+                        });
 
-                    res.on("end", () => {
-                        const parseData: SuccessResponse | FailedResponse = JSON.parse(data);
-                        if (parseData.ok === 0) {
-                            resolve(parseData as SuccessResponse);
-                        } else {
-                            resolve(parseData as FailedResponse);
-                        }
-                    });
-                }
-            )
-            .on("error", (err) => {
-                reject(err);
-            });
+                        res.on("end", () => {
+                            const parseData: SuccessResponse | FailedResponse = JSON.parse(data);
+                            if (parseData.ok === 0) {
+                                resolve(parseData as SuccessResponse);
+                            } else {
+                                resolve(parseData as FailedResponse);
+                            }
+                        });
+                    }
+                )
+                .on("error", (err) => {
+                    reject(err);
+                });
+        const reqHttps = () =>
+            https
+                .request(
+                    {
+                        path,
+                        method: "post",
+                        headers,
+                        protocol: "https:",
+                        host: new url.URL(path).host,
+                        port: new url.URL(path).port,
+                    },
+                    (res) => {
+                        let data = "";
+                        res.on("data", (chunk) => {
+                            data += chunk;
+                        });
+
+                        res.on("end", () => {
+                            const parseData: SuccessResponse | FailedResponse = JSON.parse(data);
+                            if (parseData.ok === 0) {
+                                resolve(parseData as SuccessResponse);
+                            } else {
+                                resolve(parseData as FailedResponse);
+                            }
+                        });
+                    }
+                )
+                .on("error", (err) => {
+                    reject(err);
+                });
         const params = new url.URLSearchParams();
         for (let key in data) {
             params.append(key, String(data[key]));
         }
+        const req = SET_PROXY ? reqHttp() : reqHttps();
         req.write(params.toString());
         req.end();
     });
@@ -89,6 +125,8 @@ class SliceIdGenerator {
     }
 }
 
+const sliceIdInstance = new SliceIdGenerator();
+
 try {
     // prepare interface
     const prepareRes = await PostRequestData(
@@ -96,7 +134,6 @@ try {
         {
             "Content-Type": "application/x-www-form-urlencoded",
             charset: "UTF-8",
-            Host: "raasr.xfyun.cn",
         },
         {
             app_id: APP_ID,
@@ -119,7 +156,7 @@ try {
                 signa: createSign(CURRENT_TIME),
                 ts: CURRENT_TIME,
                 task_id: prepareRes.data,
-                slice_id: new SliceIdGenerator().getNextSliceId(),
+                slice_id: sliceIdInstance.getNextSliceId(),
                 content: "hhhhs",
             }
         );

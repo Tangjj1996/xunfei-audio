@@ -1,16 +1,47 @@
 import http from "http";
+import https from "https";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
+import { CURRENT_TIME, APP_ID, SECRET_key, SET_PROXY } from "./constance";
 import url from "url";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
-        const req = http
-            .request(path, {
+        const reqHttp = () => http
+            .request({
+            path,
+            method: "post",
+            headers: {
+                Host: "raasr.xfyun.cn",
+                ...headers,
+            },
+            protocol: "http:",
+            host: "127.0.0.1",
+            port: 8866,
+        }, (res) => {
+            let data = "";
+            res.on("data", (chunk) => {
+                data += chunk;
+            });
+            res.on("end", () => {
+                const parseData = JSON.parse(data);
+                if (parseData.ok === 0) {
+                    resolve(parseData);
+                }
+                else {
+                    resolve(parseData);
+                }
+            });
+        })
+            .on("error", (err) => {
+            reject(err);
+        });
+        const reqHttps = () => https
+            .request({
+            path,
             method: "post",
             headers,
-            protocol: "http:",
-            hostname: "127.0.0.1",
-            port: "8866",
+            protocol: "https:",
+            host: new url.URL(path).host,
+            port: new url.URL(path).port,
         }, (res) => {
             let data = "";
             res.on("data", (chunk) => {
@@ -33,6 +64,7 @@ const PostRequestData = (path, headers, data) => {
         for (let key in data) {
             params.append(key, String(data[key]));
         }
+        const req = SET_PROXY ? reqHttp() : reqHttps();
         req.write(params.toString());
         req.end();
     });
@@ -67,12 +99,12 @@ class SliceIdGenerator {
         return this.__ch;
     }
 }
+const sliceIdInstance = new SliceIdGenerator();
 try {
     // prepare interface
     const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
         "Content-Type": "application/x-www-form-urlencoded",
         charset: "UTF-8",
-        Host: "raasr.xfyun.cn",
     }, {
         app_id: APP_ID,
         signa: createSign(CURRENT_TIME),
@@ -81,6 +113,7 @@ try {
         file_name: "1.wav",
         slice_num: 1,
     });
+    console.log(prepareRes, "-----------");
     if (prepareRes.ok === 0) {
         // upload interface
         const uploadRes = await PostRequestData("https://raasr.xfyun.cn/api/upload", {
@@ -90,9 +123,10 @@ try {
             signa: createSign(CURRENT_TIME),
             ts: CURRENT_TIME,
             task_id: prepareRes.data,
-            slice_id: new SliceIdGenerator().getNextSliceId(),
+            slice_id: sliceIdInstance.getNextSliceId(),
             content: "hhhhs",
         });
+        console.log(uploadRes, "---------------");
     }
 }
 catch (_) {
