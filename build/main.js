@@ -3,6 +3,8 @@ import https from "https";
 import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_key, SET_PROXY } from "./constance";
 import url from "url";
+import fs from "fs";
+import path from "path";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
         const reqHttp = () => http
@@ -64,6 +66,7 @@ const PostRequestData = (path, headers, data) => {
         for (let key in data) {
             params.append(key, String(data[key]));
         }
+        console.log(params, "-----------------");
         const req = SET_PROXY ? reqHttp() : reqHttps();
         req.write(params.toString());
         req.end();
@@ -102,6 +105,9 @@ class SliceIdGenerator {
 const sliceIdInstance = new SliceIdGenerator();
 try {
     // prepare interface
+    const filepath = path.resolve(process.cwd(), "./src/asset/test.mp3");
+    const fileLen = fs.statSync(filepath).size;
+    const filename = path.basename(filepath);
     const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
         "Content-Type": "application/x-www-form-urlencoded",
         charset: "UTF-8",
@@ -109,13 +115,13 @@ try {
         app_id: APP_ID,
         signa: createSign(CURRENT_TIME),
         ts: CURRENT_TIME,
-        file_len: 1 << 10,
-        file_name: "1.wav",
+        file_len: fileLen,
+        file_name: filename,
         slice_num: 1,
     });
-    console.log(prepareRes, "-----------");
     if (prepareRes.ok === 0) {
         // upload interface
+        const fileFragment = fs.createReadStream(filepath);
         const uploadRes = await PostRequestData("https://raasr.xfyun.cn/api/upload", {
             "Content-Type": "multipart/form-data",
         }, {
@@ -124,9 +130,9 @@ try {
             ts: CURRENT_TIME,
             task_id: prepareRes.data,
             slice_id: sliceIdInstance.getNextSliceId(),
-            content: "hhhhs",
+            content: fileFragment,
         });
-        console.log(uploadRes, "---------------");
+        console.log(uploadRes);
     }
 }
 catch (_) {

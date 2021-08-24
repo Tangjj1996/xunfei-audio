@@ -164,7 +164,7 @@ export type UploadOptions = {
     /**
      * 分片文件内容
      */
-    content: string;
+    content: unknown;
 } & BaseOptions;
 
 export type MergeOptions = {} & BaseOptions;
