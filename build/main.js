@@ -1,49 +1,20 @@
-import http from "http";
 import https from "https";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_key, SET_PROXY } from "./constance";
-import url from "url";
+import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
 import fs from "fs";
 import path from "path";
+import url from "url";
+import FormData from "form-data";
 const PostRequestData = (path, headers, data) => {
     return new Promise((resolve, reject) => {
-        const reqHttp = () => http
-            .request({
-            path,
-            method: "post",
-            headers: {
-                Host: "raasr.xfyun.cn",
-                ...headers,
-            },
-            protocol: "http:",
-            host: "127.0.0.1",
-            port: 8866,
-        }, (res) => {
-            let data = "";
-            res.on("data", (chunk) => {
-                data += chunk;
-            });
-            res.on("end", () => {
-                const parseData = JSON.parse(data);
-                if (parseData.ok === 0) {
-                    resolve(parseData);
-                }
-                else {
-                    resolve(parseData);
-                }
-            });
-        })
-            .on("error", (err) => {
-            reject(err);
-        });
-        const reqHttps = () => https
+        const whatWg = new url.URL(path);
+        const req = https
             .request({
             path,
             method: "post",
             headers,
-            protocol: "https:",
-            host: new url.URL(path).host,
-            port: new url.URL(path).port,
+            hostname: whatWg.hostname,
+            port: whatWg.port,
         }, (res) => {
             let data = "";
             res.on("data", (chunk) => {
@@ -62,14 +33,23 @@ const PostRequestData = (path, headers, data) => {
             .on("error", (err) => {
             reject(err);
         });
-        const params = new url.URLSearchParams();
-        for (let key in data) {
-            params.append(key, String(data[key]));
+        if (headers["Content-Type"].match("application/x-www-form-urlencoded")) {
+            const queryString = new url.URLSearchParams();
+            for (let key in data) {
+                queryString.append(key, String(data[key]));
+            }
+            req.write(queryString.toString());
+            req.end();
         }
-        console.log(params, "-----------------");
-        const req = SET_PROXY ? reqHttp() : reqHttps();
-        req.write(params.toString());
-        req.end();
+        else if (headers["Content-Type"].match("multipart/form-data")) {
+            const form = new FormData();
+            for (let key in data) {
+                form.append(key, data[key]);
+            }
+            form.pipe(req).on("finish", () => {
+                console.log(req);
+            });
+        }
     });
 };
 const createSign = (ts) => {
@@ -109,8 +89,7 @@ try {
     const fileLen = fs.statSync(filepath).size;
     const filename = path.basename(filepath);
     const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
-        "Content-Type": "application/x-www-form-urlencoded",
-        charset: "UTF-8",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     }, {
         app_id: APP_ID,
         signa: createSign(CURRENT_TIME),
@@ -119,6 +98,7 @@ try {
         file_name: filename,
         slice_num: 1,
     });
+    console.log(prepareRes);
     if (prepareRes.ok === 0) {
         // upload interface
         const fileFragment = fs.createReadStream(filepath);
