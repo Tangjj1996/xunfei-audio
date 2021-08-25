@@ -8,10 +8,10 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import https from "https";
+import https from "http";
 import type http from "http";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
+import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE } from "./constance";
 import fs from "fs";
 import path from "path";
 import url from "url";
@@ -22,7 +22,8 @@ const PostRequestData = <
 >(
     path: T,
     headers: http.OutgoingHttpHeaders,
-    data: PostDataParam<T>
+    data: PostDataParam<T>,
+    form?: any
 ) => {
     return new Promise<SuccessResponse | FailedResponse>((resolve, reject) => {
         const whatWg = new url.URL(path);
@@ -62,7 +63,6 @@ const PostRequestData = <
             req.write(queryString.toString());
             req.end();
         } else if ((headers["Content-Type"] as string).match("multipart/form-data")) {
-            const form = new FormData();
             for (let key in data) {
                 form.append(key, data[key]);
             }
@@ -73,7 +73,7 @@ const PostRequestData = <
 
 const createSign = (ts: number): string => {
     let md5 = crypto.MD5(APP_ID + ts).toString();
-    let sha1 = crypto.HmacSHA1(md5, SECRET_key);
+    let sha1 = crypto.HmacSHA1(md5, SECRET_KEY);
     let sign = crypto.enc.Base64.stringify(sha1);
     return sign;
 };
@@ -122,25 +122,46 @@ try {
             slice_num: 1,
         }
     );
-    console.log(prepareRes);
     if (prepareRes.ok === 0) {
         // upload interface
-        const fileFragment = fs.createReadStream(filepath);
-        const uploadRes = await PostRequestData(
-            "https://raasr.xfyun.cn/api/upload",
-            {
-                "Content-Type": "multipart/form-data",
-            },
-            {
-                app_id: APP_ID,
-                signa: createSign(CURRENT_TIME),
-                ts: CURRENT_TIME,
-                task_id: prepareRes.data,
-                slice_id: sliceIdInstance.getNextSliceId(),
-                content: fileFragment,
+        let start = 0;
+        const upload = async (fileLen: number) => {
+            let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
+                end = start + len - 1;
+            const form = new FormData();
+            const fileFragment = fs.createReadStream(filepath, {
+                start,
+                end,
+            });
+            const uploadRes = await PostRequestData(
+                "https://raasr.xfyun.cn/api/upload",
+                {
+                    "Content-Type": `multipart/form-data; boundary=${form.getBoundary()}`,
+                },
+                {
+                    app_id: APP_ID,
+                    signa: createSign(CURRENT_TIME),
+                    ts: CURRENT_TIME,
+                    task_id: prepareRes.data,
+                    slice_id: sliceIdInstance.getNextSliceId(),
+                    content: fileFragment,
+                },
+                form
+            );
+            if (uploadRes.ok === 0) {
+                start = end + 1;
+                fileLen -= len;
+
+                if (fileLen > 0) {
+                    return await upload(fileLen);
+                } else {
+                    return uploadRes;
+                }
             }
-        );
-        console.log(uploadRes);
+        };
+        const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
+        if (uploadRes.ok === 0) {
+        }
     }
 } catch (_) {
     console.error("[PostRequestData]::net Error", _);

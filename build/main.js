@@ -1,11 +1,11 @@
-import https from "https";
+import https from "http";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_key } from "./constance";
+import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE } from "./constance";
 import fs from "fs";
 import path from "path";
 import url from "url";
 import FormData from "form-data";
-const PostRequestData = (path, headers, data) => {
+const PostRequestData = (path, headers, data, form) => {
     return new Promise((resolve, reject) => {
         const whatWg = new url.URL(path);
         const req = https
@@ -42,19 +42,16 @@ const PostRequestData = (path, headers, data) => {
             req.end();
         }
         else if (headers["Content-Type"].match("multipart/form-data")) {
-            const form = new FormData();
             for (let key in data) {
                 form.append(key, data[key]);
             }
-            form.pipe(req).on("finish", () => {
-                console.log(req);
-            });
+            form.pipe(req);
         }
     });
 };
 const createSign = (ts) => {
     let md5 = crypto.MD5(APP_ID + ts).toString();
-    let sha1 = crypto.HmacSHA1(md5, SECRET_key);
+    let sha1 = crypto.HmacSHA1(md5, SECRET_KEY);
     let sign = crypto.enc.Base64.stringify(sha1);
     return sign;
 };
@@ -98,21 +95,42 @@ try {
         file_name: filename,
         slice_num: 1,
     });
-    console.log(prepareRes);
     if (prepareRes.ok === 0) {
         // upload interface
-        const fileFragment = fs.createReadStream(filepath);
-        const uploadRes = await PostRequestData("https://raasr.xfyun.cn/api/upload", {
-            "Content-Type": "multipart/form-data",
-        }, {
-            app_id: APP_ID,
-            signa: createSign(CURRENT_TIME),
-            ts: CURRENT_TIME,
-            task_id: prepareRes.data,
-            slice_id: sliceIdInstance.getNextSliceId(),
-            content: fileFragment,
-        });
+        let start = 0;
+        const upload = async (fileLen) => {
+            let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE, end = start + len - 1;
+            const form = new FormData();
+            const fileFragment = fs.createReadStream(filepath, {
+                start,
+                end,
+            });
+            const uploadRes = await PostRequestData("https://raasr.xfyun.cn/api/upload", {
+                "Content-Type": `multipart/form-data; boundary=${form.getBoundary()}`,
+            }, {
+                app_id: APP_ID,
+                signa: createSign(CURRENT_TIME),
+                ts: CURRENT_TIME,
+                task_id: prepareRes.data,
+                slice_id: sliceIdInstance.getNextSliceId(),
+                content: fileFragment,
+            }, form);
+            if (uploadRes.ok === 0) {
+                start = end + 1;
+                fileLen -= len;
+                console.log("hhhhh");
+                if (fileLen > 0) {
+                    return await upload(fileLen);
+                }
+                else {
+                    return 1;
+                }
+            }
+        };
+        const uploadRes = await upload(fileLen);
         console.log(uploadRes);
+        // if (uploadRes.ok === 0) {
+        // }
     }
 }
 catch (_) {
