@@ -8,7 +8,7 @@ import {
     PrepareFetchUrl,
     SuccessResponse,
     UploadFetchUrl,
-} from "./app.config";
+} from "../types/app.config";
 import https from "https";
 import type http from "http";
 import crypto from "crypto-js";
@@ -232,11 +232,15 @@ const sliceIdInstance = new SliceIdGenerator();
                                     }
                                 );
                                 if (getResultRes.ok === 0) {
-                                    const file = fs.createWriteStream(filename.slice(0, -4) + ".txt");
+                                    const file = fs.createWriteStream(filename.slice(0, -4) + "source.txt");
                                     file.write(BANNER + getResultRes.data);
                                     file.end();
                                     file.on("finish", () => {
-                                        log("成功保存在", chalk.greenBright(filename.slice(0, -4) + ".txt"));
+                                        log(
+                                            `源文件成功保存在 ${chalk.greenBright(
+                                                filename.slice(0, -4) + "source.txt"
+                                            )}`
+                                        );
                                     });
                                 }
                             }

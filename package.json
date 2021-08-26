@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "main": "build/main.js",
   "license": "MIT",
+  "files": [
+    "build/*"
+  ],
+  "types": "types/app.config.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "yarn build && node --experimental-specifier-resolution=node build/main.js"
+    "start": "yarn build && node build/main.js"
   },
   "bin": {
     "xf-audio": "./build/main.js"
