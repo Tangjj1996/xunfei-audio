@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const http_1 = __importDefault(require("http"));
+const https_1 = __importDefault(require("https"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const constance_1 = require("./constance");
 const fs_1 = __importDefault(require("fs"));
@@ -21,16 +21,13 @@ if (!fs_1.default.existsSync(audioFilePath)) {
 const PostRequestData = (path, headers, data, form) => {
     return new Promise((resolve, reject) => {
         const whatWg = new url_1.default.URL(path);
-        const req = http_1.default
+        const req = https_1.default
             .request({
             path,
             method: "post",
-            headers: {
-                ...headers,
-                Host: whatWg.host,
-            },
-            hostname: "127.0.0.1",
-            port: 8866,
+            headers,
+            hostname: whatWg.hostname,
+            port: whatWg.port,
         }, (res) => {
             let data = "";
             res.on("data", (chunk) => {
@@ -104,6 +101,9 @@ const sliceIdInstance = new SliceIdGenerator();
         // prepare interface
         const fileLen = fs_1.default.statSync(audioFilePath).size;
         const filename = path_1.default.basename(audioFilePath);
+        const sliceNum = Math.ceil(fileLen / constance_1.FILE_PIECE_SICE);
+        utils_1.log(`文件长度 ${chalk_1.default.greenBright(fileLen)} 文件名 ${chalk_1.default.greenBright(filename)} 分 ${chalk_1.default.greenBright(sliceNum)} 次上传`);
+        utils_1.log(`开始调用前置接口 prepare `);
         const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         }, {
@@ -112,12 +112,14 @@ const sliceIdInstance = new SliceIdGenerator();
             ts: constance_1.CURRENT_TIME,
             file_len: fileLen,
             file_name: filename,
-            slice_num: Math.ceil(fileLen / constance_1.FILE_PIECE_SICE),
+            slice_num: sliceNum,
         });
         if (prepareRes.ok === 0) {
+            utils_1.log(`调用前置接口成功 prepare 开始调用上传接口 upload`);
             // upload interface
-            let start = 0;
+            let start = 0, index = 0;
             const upload = async (fileLen) => {
+                utils_1.log(`正在进行 ${chalk_1.default.greenBright(`${index++} / ${sliceNum}`)}`);
                 let len = fileLen < constance_1.FILE_PIECE_SICE ? fileLen : constance_1.FILE_PIECE_SICE, end = start + len - 1;
                 const form = new form_data_1.default();
                 const fileFragment = fs_1.default.createReadStream(audioFilePath, {
@@ -183,8 +185,9 @@ const sliceIdInstance = new SliceIdGenerator();
                                 if (getResultRes.ok === 0) {
                                     const file = fs_1.default.createWriteStream(filename.slice(0, -4) + ".txt");
                                     file.write(constance_1.BANNER + getResultRes.data);
+                                    file.end();
                                     file.on("finish", () => {
-                                        utils_1.log("成功保存在", chalk_1.default.cyanBright(filename.slice(0, -4) + ".txt"));
+                                        utils_1.log("成功保存在", chalk_1.default.greenBright(filename.slice(0, -4) + ".txt"));
                                     });
                                 }
                             }

@@ -9,7 +9,7 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import https from "http";
+import https from "https";
 import type http from "http";
 import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
@@ -40,12 +40,9 @@ const PostRequestData = <
                 {
                     path,
                     method: "post",
-                    headers: {
-                        ...headers,
-                        Host: whatWg.host,
-                    },
-                    hostname: "127.0.0.1",
-                    port: 8866,
+                    headers,
+                    hostname: whatWg.hostname,
+                    port: whatWg.port,
                 },
                 (res) => {
                     let data = "";
@@ -122,6 +119,13 @@ const sliceIdInstance = new SliceIdGenerator();
         // prepare interface
         const fileLen = fs.statSync(audioFilePath).size;
         const filename = path.basename(audioFilePath);
+        const sliceNum = Math.ceil(fileLen / FILE_PIECE_SICE);
+        log(
+            `文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(
+                sliceNum
+            )} 次上传`
+        );
+        log(`开始调用前置接口 prepare `);
         const prepareRes = await PostRequestData(
             "https://raasr.xfyun.cn/api/prepare",
             {
@@ -133,13 +137,16 @@ const sliceIdInstance = new SliceIdGenerator();
                 ts: CURRENT_TIME,
                 file_len: fileLen,
                 file_name: filename,
-                slice_num: Math.ceil(fileLen / FILE_PIECE_SICE),
+                slice_num: sliceNum,
             }
         );
         if (prepareRes.ok === 0) {
+            log(`调用前置接口成功 prepare 开始调用上传接口 upload`);
             // upload interface
-            let start = 0;
+            let start = 0,
+                index = 0;
             const upload = async (fileLen: number) => {
+                log(`正在上传 ${chalk.greenBright(`${index++} / ${sliceNum}`)}`);
                 let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
                     end = start + len - 1;
                 const form = new FormData();
@@ -175,6 +182,7 @@ const sliceIdInstance = new SliceIdGenerator();
             };
             const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
             if (uploadRes.ok === 0) {
+                log(`文件上传成功 调用合并接口 merge`);
                 const mergeRes = await PostRequestData(
                     "https://raasr.xfyun.cn/api/merge",
                     {
@@ -188,6 +196,7 @@ const sliceIdInstance = new SliceIdGenerator();
                     }
                 );
                 if (mergeRes.ok === 0) {
+                    log(`合并成功 每 ${chalk.greenBright(5)}秒 调用进度查询接口 getProgress`);
                     const progressFn = async () => {
                         return await PostRequestData(
                             "https://raasr.xfyun.cn/api/getProgress",
@@ -225,7 +234,7 @@ const sliceIdInstance = new SliceIdGenerator();
                                     file.write(BANNER + getResultRes.data);
                                     file.end();
                                     file.on("finish", () => {
-                                        log("成功保存在", chalk.cyanBright(filename.slice(0, -4) + ".txt"));
+                                        log("成功保存在", chalk.greenBright(filename.slice(0, -4) + ".txt"));
                                     });
                                 }
                             }
