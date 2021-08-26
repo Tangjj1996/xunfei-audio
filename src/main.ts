@@ -24,6 +24,8 @@ let audioFilePath = path.resolve(process.cwd(), `${process.argv[2] || "1.m4a"}`)
 if (!fs.existsSync(audioFilePath)) {
     err("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
+} else {
+    log(`文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
 }
 const PostRequestData = <
     T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
