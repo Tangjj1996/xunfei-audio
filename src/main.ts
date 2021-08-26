@@ -77,7 +77,7 @@ const PostRequestData = <
                 form.append(key, data[key]);
             }
             form.getLength((err, length) => {
-                req.setHeader("content-lenght", length);
+                req.setHeader("Content-length", length);
                 form.pipe(req);
             });
         }
