@@ -9,7 +9,7 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import https from "https";
+import https from "http";
 import type http from "http";
 import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
@@ -17,14 +17,13 @@ import fs from "fs";
 import path from "path";
 import url from "url";
 import FormData from "form-data";
+import { err, log } from "./utils";
 
-let audioFilePath = path.resolve(process.cwd(), `./${process.argv[2]}`);
-
+let audioFilePath = path.resolve(process.cwd(), `${process.argv[2] || "10.m4a"}`);
 if (!fs.existsSync(audioFilePath)) {
-    console.log("\n\nThe audio file is no exit!\n\n");
+    err("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
 }
-
 const PostRequestData = <
     T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
 >(
@@ -201,6 +200,7 @@ const sliceIdInstance = new SliceIdGenerator();
                     };
                     const timer = setInterval(async () => {
                         const progressRes: SuccessResponse | FailedResponse = await progressFn();
+                        log("正在获取转码进度", JSON.stringify(progressRes));
                         if (progressRes.ok === 0) {
                             if (JSON.parse(progressRes.data)?.status === 9) {
                                 clearInterval(timer);
@@ -222,7 +222,7 @@ const sliceIdInstance = new SliceIdGenerator();
                                 }
                             }
                         }
-                    }, 1000);
+                    }, 5000);
                 }
             }
         }

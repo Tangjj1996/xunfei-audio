@@ -11,10 +11,10 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const url_1 = __importDefault(require("url"));
 const form_data_1 = __importDefault(require("form-data"));
-let audioFilePath = path_1.default.resolve(process.cwd(), `./${process.argv[2]}`);
-console.log(audioFilePath);
+const utils_1 = require("./utils");
+let audioFilePath = path_1.default.resolve(process.cwd(), `${process.argv[2] || "10.m4a"}`);
 if (!fs_1.default.existsSync(audioFilePath)) {
-    console.log("\n\nThe audio file is no exit!\n\n");
+    utils_1.err("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
 }
 const PostRequestData = (path, headers, data, form) => {
@@ -164,6 +164,7 @@ const sliceIdInstance = new SliceIdGenerator();
                     };
                     const timer = setInterval(async () => {
                         const progressRes = await progressFn();
+                        utils_1.log("正在获取转码进度", JSON.stringify(progressRes));
                         if (progressRes.ok === 0) {
                             if (JSON.parse(progressRes.data)?.status === 9) {
                                 clearInterval(timer);
@@ -181,7 +182,7 @@ const sliceIdInstance = new SliceIdGenerator();
                                 }
                             }
                         }
-                    }, 1000);
+                    }, 5000);
                 }
             }
         }
