@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "main": "build/main.js",
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "yarn build && node --experimental-specifier-resolution=node build/main.js"
+  },
+  "bin": {
+    "xf-audio": "./build/main.js"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.0.2",

@@ -11,11 +11,18 @@ import {
 import https from "http";
 import type http from "http";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE } from "./constance";
+import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
 import fs from "fs";
 import path from "path";
 import url from "url";
 import FormData from "form-data";
+
+const audioFilePath = process.argv[2];
+
+if (!fs.existsSync(process.cwd() + audioFilePath)) {
+    console.log("\n\nThe audio file is no exit!\n\n");
+    process.exit(1);
+}
 
 const PostRequestData = <
     T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
@@ -32,9 +39,12 @@ const PostRequestData = <
                 {
                     path,
                     method: "post",
-                    headers,
-                    hostname: whatWg.hostname,
-                    port: whatWg.port,
+                    headers: {
+                        ...headers,
+                        Host: whatWg.host,
+                    },
+                    hostname: "127.0.0.1",
+                    port: 8866,
                 },
                 (res) => {
                     let data = "";
@@ -103,118 +113,122 @@ class SliceIdGenerator {
 
 const sliceIdInstance = new SliceIdGenerator();
 
-try {
-    // prepare interface
-    const filepath = path.resolve(process.cwd(), "./src/asset/test.mp3");
-    const fileLen = fs.statSync(filepath).size;
-    const filename = path.basename(filepath);
-    const prepareRes = await PostRequestData(
-        "https://raasr.xfyun.cn/api/prepare",
-        {
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        },
-        {
-            app_id: APP_ID,
-            signa: createSign(CURRENT_TIME),
-            ts: CURRENT_TIME,
-            file_len: fileLen,
-            file_name: filename,
-            slice_num: 1,
-        }
-    );
-    if (prepareRes.ok === 0) {
-        // upload interface
-        let start = 0;
-        const upload = async (fileLen: number) => {
-            let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
-                end = start + len - 1;
-            const form = new FormData();
-            const fileFragment = fs.createReadStream(filepath, {
-                start,
-                end,
-            });
-            const uploadRes = await PostRequestData(
-                "https://raasr.xfyun.cn/api/upload",
-                {
-                    "Content-Type": `multipart/form-data; boundary=${form.getBoundary()}`,
-                },
-                {
-                    app_id: APP_ID,
-                    signa: createSign(CURRENT_TIME),
-                    ts: CURRENT_TIME,
-                    task_id: prepareRes.data,
-                    slice_id: sliceIdInstance.getNextSliceId(),
-                    content: fileFragment,
-                },
-                form
-            );
-            if (uploadRes.ok === 0) {
-                start = end + 1;
-                fileLen -= len;
-
-                if (fileLen > 0) {
-                    return await upload(fileLen);
-                } else {
-                    return uploadRes;
-                }
+(async () => {
+    try {
+        // prepare interface
+        const filepath = process.cwd() + audioFilePath;
+        const fileLen = fs.statSync(filepath).size;
+        const filename = path.basename(filepath);
+        const prepareRes = await PostRequestData(
+            "https://raasr.xfyun.cn/api/prepare",
+            {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            },
+            {
+                app_id: APP_ID,
+                signa: createSign(CURRENT_TIME),
+                ts: CURRENT_TIME,
+                file_len: fileLen,
+                file_name: filename,
+                slice_num: 1,
             }
-        };
-        const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
-        if (uploadRes.ok === 0) {
-            const mergeRes = await PostRequestData(
-                "https://raasr.xfyun.cn/api/merge",
-                {
-                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                },
-                {
-                    app_id: APP_ID,
-                    signa: createSign(CURRENT_TIME),
-                    ts: CURRENT_TIME,
-                    task_id: prepareRes.data,
+        );
+        if (prepareRes.ok === 0) {
+            // upload interface
+            let start = 0;
+            const upload = async (fileLen: number) => {
+                let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
+                    end = start + len - 1;
+                const form = new FormData();
+                const fileFragment = fs.createReadStream(filepath, {
+                    start,
+                    end,
+                });
+                const uploadRes = await PostRequestData(
+                    "https://raasr.xfyun.cn/api/upload",
+                    {
+                        "Content-Type": `multipart/form-data; boundary=${form.getBoundary()}`,
+                    },
+                    {
+                        app_id: APP_ID,
+                        signa: createSign(CURRENT_TIME),
+                        ts: CURRENT_TIME,
+                        task_id: prepareRes.data,
+                        slice_id: sliceIdInstance.getNextSliceId(),
+                        content: fileFragment,
+                    },
+                    form
+                );
+                if (uploadRes.ok === 0) {
+                    start = end + 1;
+                    fileLen -= len;
+
+                    if (fileLen > 0) {
+                        return await upload(fileLen);
+                    } else {
+                        return uploadRes;
+                    }
                 }
-            );
-            if (mergeRes.ok === 0) {
-                const progressFn = async () => {
-                    return await PostRequestData(
-                        "https://raasr.xfyun.cn/api/getProgress",
-                        {
-                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                        },
-                        {
-                            app_id: APP_ID,
-                            signa: createSign(CURRENT_TIME),
-                            ts: CURRENT_TIME,
-                            task_id: prepareRes.data,
-                        }
-                    );
-                };
-                const timer = setInterval(async () => {
-                    const progressRes: SuccessResponse | FailedResponse = await progressFn();
-                    if (progressRes.ok === 0) {
-                        if (JSON.parse(progressRes.data)?.status === 9) {
-                            clearInterval(timer);
-                            const getResultRes = await PostRequestData(
-                                "https://raasr.xfyun.cn/api/getResult",
-                                {
-                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                },
-                                {
-                                    app_id: APP_ID,
-                                    signa: createSign(CURRENT_TIME),
-                                    ts: CURRENT_TIME,
-                                    task_id: prepareRes.data,
+            };
+            const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
+            if (uploadRes.ok === 0) {
+                const mergeRes = await PostRequestData(
+                    "https://raasr.xfyun.cn/api/merge",
+                    {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    },
+                    {
+                        app_id: APP_ID,
+                        signa: createSign(CURRENT_TIME),
+                        ts: CURRENT_TIME,
+                        task_id: prepareRes.data,
+                    }
+                );
+                if (mergeRes.ok === 0) {
+                    const progressFn = async () => {
+                        return await PostRequestData(
+                            "https://raasr.xfyun.cn/api/getProgress",
+                            {
+                                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                            },
+                            {
+                                app_id: APP_ID,
+                                signa: createSign(CURRENT_TIME),
+                                ts: CURRENT_TIME,
+                                task_id: prepareRes.data,
+                            }
+                        );
+                    };
+                    const timer = setInterval(async () => {
+                        const progressRes: SuccessResponse | FailedResponse = await progressFn();
+                        if (progressRes.ok === 0) {
+                            if (JSON.parse(progressRes.data)?.status === 9) {
+                                clearInterval(timer);
+                                const getResultRes = await PostRequestData(
+                                    "https://raasr.xfyun.cn/api/getResult",
+                                    {
+                                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                                    },
+                                    {
+                                        app_id: APP_ID,
+                                        signa: createSign(CURRENT_TIME),
+                                        ts: CURRENT_TIME,
+                                        task_id: prepareRes.data,
+                                    }
+                                );
+                                if (getResultRes.ok === 0) {
+                                    const file = fs.createWriteStream(
+                                        path.basename(process.cwd() + audioFilePath) + ".txt"
+                                    );
+                                    file.write(BANNER + getResultRes.data);
                                 }
-                            );
-                            if (getResultRes.ok === 0) {
-                                const file = fs.createWriteStream("1.txt");
-                                file.write(getResultRes.data);
                             }
                         }
-                    }
-                }, 1000);
+                    }, 1000);
+                }
             }
         }
+    } catch (_) {
+        console.error("[PostRequestData]::net Error", _);
     }
-} catch (_) {
-    console.error("[PostRequestData]::net Error", _);
-}
+})();
