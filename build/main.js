@@ -118,19 +118,57 @@ try {
             if (uploadRes.ok === 0) {
                 start = end + 1;
                 fileLen -= len;
-                console.log("hhhhh");
                 if (fileLen > 0) {
                     return await upload(fileLen);
                 }
                 else {
-                    return 1;
+                    return uploadRes;
                 }
             }
         };
         const uploadRes = await upload(fileLen);
-        console.log(uploadRes);
-        // if (uploadRes.ok === 0) {
-        // }
+        if (uploadRes.ok === 0) {
+            const mergeRes = await PostRequestData("https://raasr.xfyun.cn/api/merge", {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            }, {
+                app_id: APP_ID,
+                signa: createSign(CURRENT_TIME),
+                ts: CURRENT_TIME,
+                task_id: prepareRes.data,
+            });
+            if (mergeRes.ok === 0) {
+                const progressFn = async () => {
+                    return await PostRequestData("https://raasr.xfyun.cn/api/getProgress", {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    }, {
+                        app_id: APP_ID,
+                        signa: createSign(CURRENT_TIME),
+                        ts: CURRENT_TIME,
+                        task_id: prepareRes.data,
+                    });
+                };
+                const timer = setInterval(async () => {
+                    const progressRes = await progressFn();
+                    if (progressRes.ok === 0) {
+                        if (JSON.parse(progressRes.data)?.status === 9) {
+                            clearInterval(timer);
+                            const getResultRes = await PostRequestData("https://raasr.xfyun.cn/api/getResult", {
+                                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                            }, {
+                                app_id: APP_ID,
+                                signa: createSign(CURRENT_TIME),
+                                ts: CURRENT_TIME,
+                                task_id: prepareRes.data,
+                            });
+                            if (getResultRes.ok === 0) {
+                                const file = fs.createWriteStream("1.txt");
+                                file.write(getResultRes.data);
+                            }
+                        }
+                    }
+                }, 1000);
+            }
+        }
     }
 }
 catch (_) {

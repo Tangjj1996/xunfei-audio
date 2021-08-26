@@ -23,7 +23,7 @@ const PostRequestData = <
     path: T,
     headers: http.OutgoingHttpHeaders,
     data: PostDataParam<T>,
-    form?: any
+    form?: FormData
 ) => {
     return new Promise<SuccessResponse | FailedResponse>((resolve, reject) => {
         const whatWg = new url.URL(path);
@@ -161,6 +161,58 @@ try {
         };
         const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
         if (uploadRes.ok === 0) {
+            const mergeRes = await PostRequestData(
+                "https://raasr.xfyun.cn/api/merge",
+                {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+                {
+                    app_id: APP_ID,
+                    signa: createSign(CURRENT_TIME),
+                    ts: CURRENT_TIME,
+                    task_id: prepareRes.data,
+                }
+            );
+            if (mergeRes.ok === 0) {
+                const progressFn = async () => {
+                    return await PostRequestData(
+                        "https://raasr.xfyun.cn/api/getProgress",
+                        {
+                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                        },
+                        {
+                            app_id: APP_ID,
+                            signa: createSign(CURRENT_TIME),
+                            ts: CURRENT_TIME,
+                            task_id: prepareRes.data,
+                        }
+                    );
+                };
+                const timer = setInterval(async () => {
+                    const progressRes: SuccessResponse | FailedResponse = await progressFn();
+                    if (progressRes.ok === 0) {
+                        if (JSON.parse(progressRes.data)?.status === 9) {
+                            clearInterval(timer);
+                            const getResultRes = await PostRequestData(
+                                "https://raasr.xfyun.cn/api/getResult",
+                                {
+                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                                },
+                                {
+                                    app_id: APP_ID,
+                                    signa: createSign(CURRENT_TIME),
+                                    ts: CURRENT_TIME,
+                                    task_id: prepareRes.data,
+                                }
+                            );
+                            if (getResultRes.ok === 0) {
+                                const file = fs.createWriteStream("1.txt");
+                                file.write(getResultRes.data);
+                            }
+                        }
+                    }
+                }, 1000);
+            }
         }
     }
 } catch (_) {
