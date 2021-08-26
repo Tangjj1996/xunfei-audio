@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "esnext",
     "module": "commonjs",
     "outDir": "build",
     "baseUrl": ".",
@@ -8,6 +8,7 @@
       "*": ["node_modules/*"]
     },
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   }
 }

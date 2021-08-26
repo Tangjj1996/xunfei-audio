@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import {
     FailedResponse,
     GetProgressFetchUrl,
@@ -8,7 +9,7 @@ import {
     SuccessResponse,
     UploadFetchUrl,
 } from "./app.config";
-import https from "http";
+import https from "https";
 import type http from "http";
 import crypto from "crypto-js";
 import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
@@ -17,9 +18,9 @@ import path from "path";
 import url from "url";
 import FormData from "form-data";
 
-const audioFilePath = process.argv[2];
+let audioFilePath = path.resolve(process.cwd(), `./${process.argv[2]}`);
 
-if (!fs.existsSync(process.cwd() + audioFilePath)) {
+if (!fs.existsSync(audioFilePath)) {
     console.log("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
 }
@@ -116,9 +117,8 @@ const sliceIdInstance = new SliceIdGenerator();
 (async () => {
     try {
         // prepare interface
-        const filepath = process.cwd() + audioFilePath;
-        const fileLen = fs.statSync(filepath).size;
-        const filename = path.basename(filepath);
+        const fileLen = fs.statSync(audioFilePath).size;
+        const filename = path.basename(audioFilePath);
         const prepareRes = await PostRequestData(
             "https://raasr.xfyun.cn/api/prepare",
             {
@@ -140,7 +140,7 @@ const sliceIdInstance = new SliceIdGenerator();
                 let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
                     end = start + len - 1;
                 const form = new FormData();
-                const fileFragment = fs.createReadStream(filepath, {
+                const fileFragment = fs.createReadStream(audioFilePath, {
                     start,
                     end,
                 });
@@ -217,9 +217,7 @@ const sliceIdInstance = new SliceIdGenerator();
                                     }
                                 );
                                 if (getResultRes.ok === 0) {
-                                    const file = fs.createWriteStream(
-                                        path.basename(process.cwd() + audioFilePath) + ".txt"
-                                    );
+                                    const file = fs.createWriteStream(filename.slice(0, -4) + ".txt");
                                     file.write(BANNER + getResultRes.data);
                                 }
                             }
