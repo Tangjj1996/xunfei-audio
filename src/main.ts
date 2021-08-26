@@ -18,8 +18,9 @@ import path from "path";
 import url from "url";
 import FormData from "form-data";
 import { err, log } from "./utils";
+import chalk from "chalk";
 
-let audioFilePath = path.resolve(process.cwd(), `${process.argv[2] || "10.m4a"}`);
+let audioFilePath = path.resolve(process.cwd(), `${process.argv[2] || "1.m4a"}`);
 if (!fs.existsSync(audioFilePath)) {
     err("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
@@ -76,7 +77,10 @@ const PostRequestData = <
             for (let key in data) {
                 form.append(key, data[key]);
             }
-            form.pipe(req);
+            form.getLength((err, length) => {
+                req.setHeader("content-lenght", length);
+                form.pipe(req);
+            });
         }
     });
 };
@@ -129,7 +133,7 @@ const sliceIdInstance = new SliceIdGenerator();
                 ts: CURRENT_TIME,
                 file_len: fileLen,
                 file_name: filename,
-                slice_num: 1,
+                slice_num: Math.ceil(fileLen / FILE_PIECE_SICE),
             }
         );
         if (prepareRes.ok === 0) {
@@ -200,8 +204,8 @@ const sliceIdInstance = new SliceIdGenerator();
                     };
                     const timer = setInterval(async () => {
                         const progressRes: SuccessResponse | FailedResponse = await progressFn();
-                        log("正在获取转码进度", JSON.stringify(progressRes));
                         if (progressRes.ok === 0) {
+                            log("正在获取转码进度", JSON.stringify(progressRes));
                             if (JSON.parse(progressRes.data)?.status === 9) {
                                 clearInterval(timer);
                                 const getResultRes = await PostRequestData(
@@ -219,14 +223,21 @@ const sliceIdInstance = new SliceIdGenerator();
                                 if (getResultRes.ok === 0) {
                                     const file = fs.createWriteStream(filename.slice(0, -4) + ".txt");
                                     file.write(BANNER + getResultRes.data);
+                                    file.end();
+                                    file.on("finish", () => {
+                                        log("成功保存在", chalk.cyanBright(filename.slice(0, -4) + ".txt"));
+                                    });
                                 }
                             }
+                        } else if (progressRes.ok === -1) {
+                            clearInterval(timer);
+                            err("调用失败了", JSON.stringify(progressRes));
                         }
                     }, 5000);
                 }
             }
         }
     } catch (_) {
-        console.error("[PostRequestData]::net Error", _);
+        err("[PostRequestData]::net Error", _);
     }
 })();

@@ -12,7 +12,8 @@ const path_1 = __importDefault(require("path"));
 const url_1 = __importDefault(require("url"));
 const form_data_1 = __importDefault(require("form-data"));
 const utils_1 = require("./utils");
-let audioFilePath = path_1.default.resolve(process.cwd(), `${process.argv[2] || "10.m4a"}`);
+const chalk_1 = __importDefault(require("chalk"));
+let audioFilePath = path_1.default.resolve(process.cwd(), `${process.argv[2] || "1.m4a"}`);
 if (!fs_1.default.existsSync(audioFilePath)) {
     utils_1.err("\n\nThe audio file is no exit!\n\n");
     process.exit(1);
@@ -60,7 +61,10 @@ const PostRequestData = (path, headers, data, form) => {
             for (let key in data) {
                 form.append(key, data[key]);
             }
-            form.pipe(req);
+            form.getLength((err, length) => {
+                req.setHeader("content-lenght", length);
+                form.pipe(req);
+            });
         }
     });
 };
@@ -108,7 +112,7 @@ const sliceIdInstance = new SliceIdGenerator();
             ts: constance_1.CURRENT_TIME,
             file_len: fileLen,
             file_name: filename,
-            slice_num: 1,
+            slice_num: Math.ceil(fileLen / constance_1.FILE_PIECE_SICE),
         });
         if (prepareRes.ok === 0) {
             // upload interface
@@ -164,8 +168,8 @@ const sliceIdInstance = new SliceIdGenerator();
                     };
                     const timer = setInterval(async () => {
                         const progressRes = await progressFn();
-                        utils_1.log("正在获取转码进度", JSON.stringify(progressRes));
                         if (progressRes.ok === 0) {
+                            utils_1.log("正在获取转码进度", JSON.stringify(progressRes));
                             if (JSON.parse(progressRes.data)?.status === 9) {
                                 clearInterval(timer);
                                 const getResultRes = await PostRequestData("https://raasr.xfyun.cn/api/getResult", {
@@ -179,8 +183,15 @@ const sliceIdInstance = new SliceIdGenerator();
                                 if (getResultRes.ok === 0) {
                                     const file = fs_1.default.createWriteStream(filename.slice(0, -4) + ".txt");
                                     file.write(constance_1.BANNER + getResultRes.data);
+                                    file.on("finish", () => {
+                                        utils_1.log("成功保存在", chalk_1.default.cyanBright(filename.slice(0, -4) + ".txt"));
+                                    });
                                 }
                             }
+                        }
+                        else if (progressRes.ok === -1) {
+                            clearInterval(timer);
+                            utils_1.err("调用失败了", JSON.stringify(progressRes));
                         }
                     }, 5000);
                 }
@@ -188,6 +199,6 @@ const sliceIdInstance = new SliceIdGenerator();
         }
     }
     catch (_) {
-        console.error("[PostRequestData]::net Error", _);
+        utils_1.err("[PostRequestData]::net Error", _);
     }
 })();
