@@ -4,7 +4,8 @@
   "main": "build/main.js",
   "license": "MIT",
   "files": [
-    "build/*"
+    "build/*",
+    "types/*"
   ],
   "types": "types/app.config.d.ts",
   "scripts": {

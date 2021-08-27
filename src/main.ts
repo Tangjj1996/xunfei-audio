@@ -1,18 +1,9 @@
 #!/usr/bin/env node
-import {
-    FailedResponse,
-    GetProgressFetchUrl,
-    GetResultFetchUrl,
-    MergeFetchUrl,
-    PostDataParam,
-    PrepareFetchUrl,
-    SuccessResponse,
-    UploadFetchUrl,
-} from "../types/app.config";
+import type { FailedResponse, GetProgressFetchUrl, GetResultFetchUrl, MergeFetchUrl, PostDataParam, PrepareFetchUrl, SuccessResponse, UploadFetchUrl } from "../types/app.config";
 import https from "https";
 import type http from "http";
 import crypto from "crypto-js";
-import { CURRENT_TIME, APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
+import { APP_ID, SECRET_KEY, FILE_PIECE_SICE, BANNER } from "./constance";
 import fs from "fs";
 import path from "path";
 import url from "url";
@@ -20,16 +11,7 @@ import FormData from "form-data";
 import { err, log } from "./utils";
 import chalk from "chalk";
 
-let audioFilePath = path.resolve(process.cwd(), `${process.argv[2] || "1.m4a"}`);
-if (!fs.existsSync(audioFilePath)) {
-    err("\n\nThe audio file is no exit!\n\n");
-    process.exit(1);
-} else {
-    log(`文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
-}
-const PostRequestData = <
-    T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl
->(
+const PostRequestData = <T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl>(
     path: T,
     headers: http.OutgoingHttpHeaders,
     data: PostDataParam<T>,
@@ -116,17 +98,15 @@ class SliceIdGenerator {
 
 const sliceIdInstance = new SliceIdGenerator();
 
-(async () => {
+async function bootStart(audioFilePath) {
+    const CURRENT_TIME = Math.floor(Date.now() / 1000);
+    const signa = createSign(CURRENT_TIME);
     try {
         // prepare interface
         const fileLen = fs.statSync(audioFilePath).size;
         const filename = path.basename(audioFilePath);
         const sliceNum = Math.ceil(fileLen / FILE_PIECE_SICE);
-        log(
-            `文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(
-                sliceNum
-            )} 次上传`
-        );
+        log(`文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(sliceNum)} 次上传`);
         log(`开始调用前置接口 prepare `);
         const prepareRes = await PostRequestData(
             "https://raasr.xfyun.cn/api/prepare",
@@ -135,7 +115,7 @@ const sliceIdInstance = new SliceIdGenerator();
             },
             {
                 app_id: APP_ID,
-                signa: createSign(CURRENT_TIME),
+                signa,
                 ts: CURRENT_TIME,
                 file_len: fileLen,
                 file_name: filename,
@@ -163,7 +143,7 @@ const sliceIdInstance = new SliceIdGenerator();
                     },
                     {
                         app_id: APP_ID,
-                        signa: createSign(CURRENT_TIME),
+                        signa,
                         ts: CURRENT_TIME,
                         task_id: prepareRes.data,
                         slice_id: sliceIdInstance.getNextSliceId(),
@@ -192,13 +172,13 @@ const sliceIdInstance = new SliceIdGenerator();
                     },
                     {
                         app_id: APP_ID,
-                        signa: createSign(CURRENT_TIME),
+                        signa,
                         ts: CURRENT_TIME,
                         task_id: prepareRes.data,
                     }
                 );
                 if (mergeRes.ok === 0) {
-                    log(`合并成功 每 ${chalk.greenBright(5)}秒 调用进度查询接口 getProgress`);
+                    log(`合并成功 每 ${chalk.greenBright(5)} 秒 调用进度查询接口 getProgress`);
                     const progressFn = async () => {
                         return await PostRequestData(
                             "https://raasr.xfyun.cn/api/getProgress",
@@ -207,7 +187,7 @@ const sliceIdInstance = new SliceIdGenerator();
                             },
                             {
                                 app_id: APP_ID,
-                                signa: createSign(CURRENT_TIME),
+                                signa,
                                 ts: CURRENT_TIME,
                                 task_id: prepareRes.data,
                             }
@@ -236,11 +216,7 @@ const sliceIdInstance = new SliceIdGenerator();
                                     file.write(BANNER + getResultRes.data);
                                     file.end();
                                     file.on("finish", () => {
-                                        log(
-                                            `源文件成功保存在 ${chalk.greenBright(
-                                                filename.slice(0, -4) + "source.txt"
-                                            )}`
-                                        );
+                                        log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + "source.txt")}`);
                                     });
                                 }
                             }
@@ -254,5 +230,23 @@ const sliceIdInstance = new SliceIdGenerator();
         }
     } catch (_) {
         err("[PostRequestData]::net Error", _);
+    }
+}
+
+(async () => {
+    if (process.argv.length < 2) {
+        err("请提供文件地址");
+        process.exit(1);
+    }
+    for (let i = 2; process.argv.length; i++) {
+        const audioFilePath = path.resolve(process.cwd(), process.argv[i]);
+        if (!fs.existsSync(audioFilePath)) {
+            err("\n\nThe audio file is no exit!\n\n");
+            process.exit(1);
+        } else {
+            log(`文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
+        }
+
+        await bootStart(audioFilePath);
     }
 })();

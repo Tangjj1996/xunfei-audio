@@ -13,14 +13,6 @@ const url_1 = __importDefault(require("url"));
 const form_data_1 = __importDefault(require("form-data"));
 const utils_1 = require("./utils");
 const chalk_1 = __importDefault(require("chalk"));
-let audioFilePath = path_1.default.resolve(process.cwd(), `${process.argv[2] || "1.m4a"}`);
-if (!fs_1.default.existsSync(audioFilePath)) {
-    utils_1.err("\n\nThe audio file is no exit!\n\n");
-    process.exit(1);
-}
-else {
-    utils_1.log(`文件地址合法 当前文件路径 ${chalk_1.default.greenBright(audioFilePath)}`);
-}
 const PostRequestData = (path, headers, data, form) => {
     return new Promise((resolve, reject) => {
         const whatWg = new url_1.default.URL(path);
@@ -99,7 +91,9 @@ class SliceIdGenerator {
     }
 }
 const sliceIdInstance = new SliceIdGenerator();
-(async () => {
+async function bootStart(audioFilePath) {
+    const CURRENT_TIME = Math.floor(Date.now() / 1000);
+    const signa = createSign(CURRENT_TIME);
     try {
         // prepare interface
         const fileLen = fs_1.default.statSync(audioFilePath).size;
@@ -111,8 +105,8 @@ const sliceIdInstance = new SliceIdGenerator();
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         }, {
             app_id: constance_1.APP_ID,
-            signa: createSign(constance_1.CURRENT_TIME),
-            ts: constance_1.CURRENT_TIME,
+            signa,
+            ts: CURRENT_TIME,
             file_len: fileLen,
             file_name: filename,
             slice_num: sliceNum,
@@ -133,8 +127,8 @@ const sliceIdInstance = new SliceIdGenerator();
                     "Content-Type": `multipart/form-data; boundary=${form.getBoundary()}`,
                 }, {
                     app_id: constance_1.APP_ID,
-                    signa: createSign(constance_1.CURRENT_TIME),
-                    ts: constance_1.CURRENT_TIME,
+                    signa,
+                    ts: CURRENT_TIME,
                     task_id: prepareRes.data,
                     slice_id: sliceIdInstance.getNextSliceId(),
                     content: fileFragment,
@@ -157,19 +151,19 @@ const sliceIdInstance = new SliceIdGenerator();
                     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 }, {
                     app_id: constance_1.APP_ID,
-                    signa: createSign(constance_1.CURRENT_TIME),
-                    ts: constance_1.CURRENT_TIME,
+                    signa,
+                    ts: CURRENT_TIME,
                     task_id: prepareRes.data,
                 });
                 if (mergeRes.ok === 0) {
-                    utils_1.log(`合并成功 每 ${chalk_1.default.greenBright(5)}秒 调用进度查询接口 getProgress`);
+                    utils_1.log(`合并成功 每 ${chalk_1.default.greenBright(5)} 秒 调用进度查询接口 getProgress`);
                     const progressFn = async () => {
                         return await PostRequestData("https://raasr.xfyun.cn/api/getProgress", {
                             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                         }, {
                             app_id: constance_1.APP_ID,
-                            signa: createSign(constance_1.CURRENT_TIME),
-                            ts: constance_1.CURRENT_TIME,
+                            signa,
+                            ts: CURRENT_TIME,
                             task_id: prepareRes.data,
                         });
                     };
@@ -183,8 +177,8 @@ const sliceIdInstance = new SliceIdGenerator();
                                     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                                 }, {
                                     app_id: constance_1.APP_ID,
-                                    signa: createSign(constance_1.CURRENT_TIME),
-                                    ts: constance_1.CURRENT_TIME,
+                                    signa: createSign(CURRENT_TIME),
+                                    ts: CURRENT_TIME,
                                     task_id: prepareRes.data,
                                 });
                                 if (getResultRes.ok === 0) {
@@ -208,5 +202,22 @@ const sliceIdInstance = new SliceIdGenerator();
     }
     catch (_) {
         utils_1.err("[PostRequestData]::net Error", _);
+    }
+}
+(async () => {
+    if (process.argv.length < 2) {
+        utils_1.err("请提供文件地址");
+        process.exit(1);
+    }
+    for (let i = 2; process.argv.length; i++) {
+        const audioFilePath = path_1.default.resolve(process.cwd(), process.argv[i]);
+        if (!fs_1.default.existsSync(audioFilePath)) {
+            utils_1.err("\n\nThe audio file is no exit!\n\n");
+            process.exit(1);
+        }
+        else {
+            utils_1.log(`文件地址合法 当前文件路径 ${chalk_1.default.greenBright(audioFilePath)}`);
+        }
+        await bootStart(audioFilePath);
     }
 })();

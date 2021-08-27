@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BANNER = exports.FILE_PIECE_SICE = exports.SECRET_KEY = exports.APP_ID = exports.CURRENT_TIME = void 0;
-exports.CURRENT_TIME = Math.floor(Date.now() / 1000);
+exports.BANNER = exports.FILE_PIECE_SICE = exports.SECRET_KEY = exports.APP_ID = void 0;
 exports.APP_ID = "41ac2892";
 exports.SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
 exports.FILE_PIECE_SICE = 1024 * 1024;
