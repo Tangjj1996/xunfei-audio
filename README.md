@@ -1,4 +1,4 @@
-# REST Interface Api for xfyun
+# REST Api for xfyun
 
 [Chinese](./README_ZH.md)
 

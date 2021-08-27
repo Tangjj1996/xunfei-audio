@@ -115,11 +115,11 @@ async function bootStrap(i) {
     }
     const CURRENT_TIME = Math.floor(Date.now() / 1000);
     const signa = createSign(CURRENT_TIME);
+    const fileLen = fs.statSync(audioFilePath).size;
+    const filename = path.basename(audioFilePath);
+    const sliceNum = Math.ceil(fileLen / FILE_PIECE_SICE);
     try {
         // prepare interface
-        const fileLen = fs.statSync(audioFilePath).size;
-        const filename = path.basename(audioFilePath);
-        const sliceNum = Math.ceil(fileLen / FILE_PIECE_SICE);
         log(`文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(sliceNum)} 次上传`);
         log(`开始调用前置接口 prepare `);
         const prepareRes = await PostRequestData(
