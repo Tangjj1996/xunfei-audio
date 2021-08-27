@@ -11,6 +11,8 @@ import FormData from "form-data";
 import { err, log } from "./utils";
 import chalk from "chalk";
 
+let filePathLength = process.argv.length - 2;
+
 const PostRequestData = <T extends PrepareFetchUrl | UploadFetchUrl | MergeFetchUrl | GetProgressFetchUrl | GetResultFetchUrl>(
     path: T,
     headers: http.OutgoingHttpHeaders,
@@ -98,7 +100,19 @@ class SliceIdGenerator {
 
 const sliceIdInstance = new SliceIdGenerator();
 
-async function bootStart(audioFilePath) {
+async function bootStrap(i) {
+    if (filePathLength <= 0) {
+        log(`\n已全部成功转写 ${chalk.greenBright(process.argv.length - 2)} 个文件`);
+        process.exit(1);
+    }
+    log(chalk.yellow(`正在进行语音转写 ${chalk.greenBright(process.argv.length - i - 1)} / ${chalk.greenBright(process.argv.length - 2)}\n`));
+    const audioFilePath = path.resolve(process.cwd(), process.argv[process.argv.length - i]);
+    if (!fs.existsSync(audioFilePath)) {
+        err("\n\nThe audio file is no exit!\n\n");
+        process.exit(1);
+    } else {
+        log(`恭喜！文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
+    }
     const CURRENT_TIME = Math.floor(Date.now() / 1000);
     const signa = createSign(CURRENT_TIME);
     try {
@@ -128,7 +142,7 @@ async function bootStart(audioFilePath) {
             let start = 0,
                 index = 0;
             const upload = async (fileLen: number) => {
-                log(`正在上传 ${chalk.greenBright(`${index++} / ${sliceNum}`)}`);
+                log(`正在上传 ${chalk.greenBright(`${++index} / ${sliceNum}`)}`);
                 let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
                     end = start + len - 1;
                 const form = new FormData();
@@ -212,11 +226,12 @@ async function bootStart(audioFilePath) {
                                     }
                                 );
                                 if (getResultRes.ok === 0) {
-                                    const file = fs.createWriteStream(filename.slice(0, -4) + "source.txt");
+                                    const file = fs.createWriteStream(filename.slice(0, -4) + ".source.txt");
                                     file.write(BANNER + getResultRes.data);
                                     file.end();
                                     file.on("finish", () => {
-                                        log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + "source.txt")}`);
+                                        log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + ".source.txt")}`);
+                                        bootStrap(--filePathLength);
                                     });
                                 }
                             }
@@ -233,20 +248,10 @@ async function bootStart(audioFilePath) {
     }
 }
 
-(async () => {
-    if (process.argv.length < 2) {
+((filePathLength) => {
+    if (filePathLength <= 0) {
         err("请提供文件地址");
         process.exit(1);
     }
-    for (let i = 2; process.argv.length; i++) {
-        const audioFilePath = path.resolve(process.cwd(), process.argv[i]);
-        if (!fs.existsSync(audioFilePath)) {
-            err("\n\nThe audio file is no exit!\n\n");
-            process.exit(1);
-        } else {
-            log(`文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
-        }
-
-        await bootStart(audioFilePath);
-    }
-})();
+    bootStrap(filePathLength);
+})(filePathLength);

@@ -13,6 +13,7 @@ const url_1 = __importDefault(require("url"));
 const form_data_1 = __importDefault(require("form-data"));
 const utils_1 = require("./utils");
 const chalk_1 = __importDefault(require("chalk"));
+let filePathLength = process.argv.length - 2;
 const PostRequestData = (path, headers, data, form) => {
     return new Promise((resolve, reject) => {
         const whatWg = new url_1.default.URL(path);
@@ -91,7 +92,20 @@ class SliceIdGenerator {
     }
 }
 const sliceIdInstance = new SliceIdGenerator();
-async function bootStart(audioFilePath) {
+async function bootStrap(i) {
+    if (filePathLength <= 0) {
+        utils_1.log(`\n已全部成功转写 ${chalk_1.default.greenBright(process.argv.length - 2)} 个文件`);
+        process.exit(1);
+    }
+    utils_1.log(chalk_1.default.yellow(`正在进行语音转写 ${chalk_1.default.greenBright(process.argv.length - i - 1)} / ${chalk_1.default.greenBright(process.argv.length - 2)}\n`));
+    const audioFilePath = path_1.default.resolve(process.cwd(), process.argv[process.argv.length - i]);
+    if (!fs_1.default.existsSync(audioFilePath)) {
+        utils_1.err("\n\nThe audio file is no exit!\n\n");
+        process.exit(1);
+    }
+    else {
+        utils_1.log(`恭喜！文件地址合法 当前文件路径 ${chalk_1.default.greenBright(audioFilePath)}`);
+    }
     const CURRENT_TIME = Math.floor(Date.now() / 1000);
     const signa = createSign(CURRENT_TIME);
     try {
@@ -116,7 +130,7 @@ async function bootStart(audioFilePath) {
             // upload interface
             let start = 0, index = 0;
             const upload = async (fileLen) => {
-                utils_1.log(`正在上传 ${chalk_1.default.greenBright(`${index++} / ${sliceNum}`)}`);
+                utils_1.log(`正在上传 ${chalk_1.default.greenBright(`${++index} / ${sliceNum}`)}`);
                 let len = fileLen < constance_1.FILE_PIECE_SICE ? fileLen : constance_1.FILE_PIECE_SICE, end = start + len - 1;
                 const form = new form_data_1.default();
                 const fileFragment = fs_1.default.createReadStream(audioFilePath, {
@@ -182,11 +196,12 @@ async function bootStart(audioFilePath) {
                                     task_id: prepareRes.data,
                                 });
                                 if (getResultRes.ok === 0) {
-                                    const file = fs_1.default.createWriteStream(filename.slice(0, -4) + "source.txt");
+                                    const file = fs_1.default.createWriteStream(filename.slice(0, -4) + ".source.txt");
                                     file.write(constance_1.BANNER + getResultRes.data);
                                     file.end();
                                     file.on("finish", () => {
-                                        utils_1.log(`源文件成功保存在 ${chalk_1.default.greenBright(filename.slice(0, -4) + "source.txt")}`);
+                                        utils_1.log(`源文件成功保存在 ${chalk_1.default.greenBright(filename.slice(0, -4) + ".source.txt")}`);
+                                        bootStrap(--filePathLength);
                                     });
                                 }
                             }
@@ -204,20 +219,10 @@ async function bootStart(audioFilePath) {
         utils_1.err("[PostRequestData]::net Error", _);
     }
 }
-(async () => {
-    if (process.argv.length < 2) {
+((filePathLength) => {
+    if (filePathLength <= 0) {
         utils_1.err("请提供文件地址");
         process.exit(1);
     }
-    for (let i = 2; process.argv.length; i++) {
-        const audioFilePath = path_1.default.resolve(process.cwd(), process.argv[i]);
-        if (!fs_1.default.existsSync(audioFilePath)) {
-            utils_1.err("\n\nThe audio file is no exit!\n\n");
-            process.exit(1);
-        }
-        else {
-            utils_1.log(`文件地址合法 当前文件路径 ${chalk_1.default.greenBright(audioFilePath)}`);
-        }
-        await bootStart(audioFilePath);
-    }
-})();
+    bootStrap(filePathLength);
+})(filePathLength);

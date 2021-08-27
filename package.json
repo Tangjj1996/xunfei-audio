@@ -9,8 +9,7 @@
   ],
   "types": "types/app.config.d.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "yarn build && node build/main.js"
+    "build": "tsc"
   },
   "bin": {
     "xf-audio": "./build/main.js"
