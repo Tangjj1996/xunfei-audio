@@ -1,3 +1,3 @@
 export default {
-    "/prepare": "https://raasr.xfyun.cn/prepare",
+    "/api/prepare": "https://raasr.xfyun.cn/api/prepare",
 };
