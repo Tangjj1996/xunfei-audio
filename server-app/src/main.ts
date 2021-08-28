@@ -24,12 +24,13 @@ for (let key in proxyConfig) {
     router.post(key, koaBody(), async (ctx, next) => {
         console.log("This is occur req.url ", ctx.req.url);
         console.log("This is occur req.headers.content-type ", ctx.req.headers["content-type"], "\n");
+        console.log("thie is request.body ", ctx.request.body);
         const rawFetchRes = await fetch(proxyConfig[key], {
             headers: {
                 Host: "raasr.xfyun.cn",
                 "Content-Type": ctx.req.headers["content-type"],
             },
-            body: ctx.request.body,
+            body: new URLSearchParams(ctx.request.body).toString(),
             method: "POST",
         });
         const jsonFetchRes = await rawFetchRes.json();
