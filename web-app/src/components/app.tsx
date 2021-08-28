@@ -1,9 +1,10 @@
 import React from "react";
 import { Button } from "@material-ui/core";
 import { prepare } from "@src/api";
-const formData = new FormData();
-formData.append("name", "gujianjie");
 
+const urlParams = new URLSearchParams({
+  app_id: "41ac2892",
+});
 const App: React.FC = () => {
   const handleClick = async () => {
     const res = await prepare({
@@ -12,8 +13,7 @@ const App: React.FC = () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
       },
-      credentials: "include",
-      body: formData,
+      body: urlParams.toString(),
     });
   };
 
