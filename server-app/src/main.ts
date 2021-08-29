@@ -3,7 +3,8 @@ import proxyConfig from "./config";
 import fetch from "node-fetch";
 import Router from "koa-router";
 import koaBody from "koa-body";
-import { inspect } from "util";
+import FormData from "form-data";
+import fs from "fs";
 
 const app = new Koa();
 const router = new Router();
@@ -21,16 +22,20 @@ app.use(async (ctx, next) => {
 });
 
 for (let key in proxyConfig) {
-    router.post(key, koaBody(), async (ctx, next) => {
-        console.log("This is occur req.url ", ctx.req.url);
-        console.log("This is occur req.headers.content-type ", ctx.req.headers["content-type"], "\n");
-        console.log("thie is request.body ", ctx.request.body);
+    router.post(key, koaBody({ multipart: key === "/api/upload" }), async (ctx, next) => {
+        const isMutipart = key === "/api/upload";
+        const formData = new FormData();
+
+        if (isMutipart) {
+            for (let key in ctx.request.body) {
+                formData.append(key, ctx.request.body[key]);
+            }
+            for (let key in ctx.request.files) {
+                formData.append(key, fs.createReadStream(ctx.request.files[key]["path"]));
+            }
+        }
         const rawFetchRes = await fetch(proxyConfig[key], {
-            headers: {
-                Host: "raasr.xfyun.cn",
-                "Content-Type": ctx.req.headers["content-type"],
-            },
-            body: new URLSearchParams(ctx.request.body).toString(),
+            body: isMutipart ? formData : new URLSearchParams(ctx.request.body),
             method: "POST",
         });
         const jsonFetchRes = await rawFetchRes.json();
