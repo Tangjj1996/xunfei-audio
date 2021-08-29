@@ -1,4 +1,4 @@
-import React, { createElement, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@material-ui/core";
 import { getProgress, getResult, merge, prepare, upload } from "@src/api";
 import CryptoJS from "crypto-js";
@@ -183,6 +183,9 @@ const App: React.FC = () => {
                 await mergeFn(resultPrepare.data);
                 await getProgressFn(resultPrepare.data);
                 const resultGetResult = await getresultFn(resultPrepare.data);
+                /**
+                 * @description download
+                 */
                 const aLink = document.createElement("a") as HTMLAnchorElement;
                 const body = document.querySelector("body");
                 const fileBlob = new Blob([resultGetResult.data]);
