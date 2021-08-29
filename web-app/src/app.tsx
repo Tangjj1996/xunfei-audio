@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { createElement, useState } from "react";
 import { Button } from "@material-ui/core";
 import { getProgress, getResult, merge, prepare, upload } from "@src/api";
 import CryptoJS from "crypto-js";
@@ -42,6 +42,7 @@ class SliceIdGenerator {
 const App: React.FC = () => {
     const [fileList, setFileList] = useState<FileList[] | null>(null);
     const [curFileList, setCurFileList] = useState<FileList>(null);
+    const [isDisabled, setDisabled] = useState(false);
 
     const stateSyncFn = useSyncCallback(async () => {
         const curFileListArr = Array.from(curFileList);
@@ -178,13 +179,24 @@ const App: React.FC = () => {
 
             try {
                 const resultPrepare = await prepareFn();
-                const resultUpload = await upLoadFn(resultPrepare.data);
-                const resultMerge = await mergeFn(resultPrepare.data);
-                const resultGetProgress = await getProgressFn(resultPrepare.data);
+                await upLoadFn(resultPrepare.data);
+                await mergeFn(resultPrepare.data);
+                await getProgressFn(resultPrepare.data);
                 const resultGetResult = await getresultFn(resultPrepare.data);
+                const aLink = document.createElement("a") as HTMLAnchorElement;
+                const body = document.querySelector("body");
+                const fileBlob = new Blob([resultGetResult.data]);
+                aLink.href = window.URL.createObjectURL(fileBlob);
+                aLink.download = "audio_to_file.txt";
+                aLink.style.display = "none";
+                body.appendChild(aLink);
+                aLink.click();
+                body.removeChild(aLink);
+                window.URL.revokeObjectURL(aLink.href);
             } catch (_) {
                 console.error(_);
             }
+            setDisabled(false);
         }
     });
 
@@ -194,7 +206,8 @@ const App: React.FC = () => {
         inputRef.accept = "audio/*";
         inputRef.multiple = true;
         inputRef.click();
-        inputRef.onchange = async function (e) {
+        inputRef.onchange = function (e) {
+            setDisabled(true);
             setFileList((pre) => (pre === null ? [(this as HTMLInputElement).files] : [...pre, (this as HTMLInputElement).files]));
             setCurFileList((this as HTMLInputElement).files);
             stateSyncFn();
@@ -203,7 +216,7 @@ const App: React.FC = () => {
 
     return (
         <>
-            <Button variant="contained" onClick={() => handleClick()}>
+            <Button variant="contained" onClick={() => handleClick()} disabled={isDisabled}>
                 上传文件
             </Button>
             {fileList && fileList.map((aItem) => Array.from(aItem).map((item, index) => <div key={index}>{item.name}</div>))}
