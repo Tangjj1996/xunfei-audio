@@ -79,12 +79,13 @@ const App: React.FC = () => {
                         const fileLen = curFileListArr[i].size < FILE_PIECE_SICE ? curFileListArr[i].size : FILE_PIECE_SICE;
                         const end = start + fileLen;
                         const formData = new FormData();
+                        console.log(`fileLen:: ${curFileListArr[i].size} FILE_PIECE_SICE:: ${FILE_PIECE_SICE} start:: ${start} end:: ${end}`);
                         formData.append("app_id", APP_ID);
                         formData.append("ts", String(time));
                         formData.append("signa", createSign(time));
                         formData.append("task_id", data);
                         formData.append("slice_id", sliceIdInstance.getNextSliceId());
-                        formData.append("content", curFileListArr[i].slice(start, end));
+                        formData.append("content", curFileListArr[i].slice(start, end < curFileListArr[i].size ? end : curFileListArr[i].size));
 
                         let result = await upload({
                             method: "POST",
@@ -92,7 +93,7 @@ const App: React.FC = () => {
                             body: formData,
                         });
 
-                        start = end + 1;
+                        start = end;
 
                         if (end > FILE_PIECE_SICE) {
                             return result;
