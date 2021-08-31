@@ -108,24 +108,33 @@ async function bootStrap(i) {
     }
     const CURRENT_TIME = Math.floor(Date.now() / 1000);
     const signa = createSign(CURRENT_TIME);
-    try {
-        // prepare interface
-        const fileLen = fs_1.default.statSync(audioFilePath).size;
-        const filename = path_1.default.basename(audioFilePath);
-        const sliceNum = Math.ceil(fileLen / constance_1.FILE_PIECE_SICE);
-        utils_1.log(`文件长度 ${chalk_1.default.greenBright(fileLen)} 文件名 ${chalk_1.default.greenBright(filename)} 分 ${chalk_1.default.greenBright(sliceNum)} 次上传`);
-        utils_1.log(`开始调用前置接口 prepare `);
-        const prepareRes = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        }, {
-            app_id: constance_1.APP_ID,
-            signa,
-            ts: CURRENT_TIME,
-            file_len: fileLen,
-            file_name: filename,
-            slice_num: sliceNum,
+    const fileLen = fs_1.default.statSync(audioFilePath).size;
+    const filename = path_1.default.basename(audioFilePath);
+    const sliceNum = Math.ceil(fileLen / constance_1.FILE_PIECE_SICE);
+    utils_1.log(`文件长度 ${chalk_1.default.greenBright(fileLen)} 文件名 ${chalk_1.default.greenBright(filename)} 分 ${chalk_1.default.greenBright(sliceNum)} 次上传`);
+    utils_1.log(`开始调用前置接口 prepare `);
+    const prepareFn = () => {
+        return new Promise(async (resolve, reject) => {
+            const result = await PostRequestData("https://raasr.xfyun.cn/api/prepare", {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            }, {
+                app_id: constance_1.APP_ID,
+                signa,
+                ts: CURRENT_TIME,
+                file_len: fileLen,
+                file_name: filename,
+                slice_num: sliceNum,
+            });
+            if (result.ok === 0) {
+                resolve(result);
+            }
+            else {
+                reject(JSON.stringify({ ...result, stack: "prepare" }));
+            }
         });
-        if (prepareRes.ok === 0) {
+    };
+    const uploadFn = (data) => {
+        return new Promise(async (resolve, reject) => {
             utils_1.log(`调用前置接口成功 prepare 开始调用上传接口 upload`);
             // upload interface
             let start = 0, index = 0;
@@ -143,7 +152,7 @@ async function bootStrap(i) {
                     app_id: constance_1.APP_ID,
                     signa,
                     ts: CURRENT_TIME,
-                    task_id: prepareRes.data,
+                    task_id: data,
                     slice_id: sliceIdInstance.getNextSliceId(),
                     content: fileFragment,
                 }, form);
@@ -158,65 +167,97 @@ async function bootStrap(i) {
                     }
                 }
             };
-            const uploadRes = await upload(fileLen);
-            if (uploadRes.ok === 0) {
-                utils_1.log(`文件上传成功 调用合并接口 merge`);
-                const mergeRes = await PostRequestData("https://raasr.xfyun.cn/api/merge", {
+            const result = await upload(fileLen);
+            if (result.ok === 0) {
+                resolve(result);
+            }
+            else {
+                reject(JSON.stringify({ ...result, stack: "upload" }));
+            }
+        });
+    };
+    const mergeFn = (data) => {
+        return new Promise(async (resolve, reject) => {
+            utils_1.log(`文件上传成功 调用合并接口 merge`);
+            const result = await PostRequestData("https://raasr.xfyun.cn/api/merge", {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            }, {
+                app_id: constance_1.APP_ID,
+                signa,
+                ts: CURRENT_TIME,
+                task_id: data,
+            });
+            if (result.ok === 0) {
+                resolve(result);
+            }
+            else {
+                reject(JSON.stringify({ ...result, stack: "merge" }));
+            }
+        });
+    };
+    const getProgressFn = (data) => {
+        return new Promise((resolve, reject) => {
+            utils_1.log(`合并成功 每 ${chalk_1.default.greenBright(5)} 秒 调用进度查询接口 getProgress`);
+            const timer = setInterval(async () => {
+                const result = await PostRequestData("https://raasr.xfyun.cn/api/getProgress", {
                     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 }, {
                     app_id: constance_1.APP_ID,
                     signa,
                     ts: CURRENT_TIME,
-                    task_id: prepareRes.data,
+                    task_id: data,
                 });
-                if (mergeRes.ok === 0) {
-                    utils_1.log(`合并成功 每 ${chalk_1.default.greenBright(5)} 秒 调用进度查询接口 getProgress`);
-                    const progressFn = async () => {
-                        return await PostRequestData("https://raasr.xfyun.cn/api/getProgress", {
-                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                        }, {
-                            app_id: constance_1.APP_ID,
-                            signa,
-                            ts: CURRENT_TIME,
-                            task_id: prepareRes.data,
-                        });
-                    };
-                    const timer = setInterval(async () => {
-                        const progressRes = await progressFn();
-                        if (progressRes.ok === 0) {
-                            utils_1.log("正在获取转码进度", JSON.stringify(progressRes));
-                            if (JSON.parse(progressRes.data)?.status === 9) {
-                                clearInterval(timer);
-                                const getResultRes = await PostRequestData("https://raasr.xfyun.cn/api/getResult", {
-                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                }, {
-                                    app_id: constance_1.APP_ID,
-                                    signa: createSign(CURRENT_TIME),
-                                    ts: CURRENT_TIME,
-                                    task_id: prepareRes.data,
-                                });
-                                if (getResultRes.ok === 0) {
-                                    const file = fs_1.default.createWriteStream(filename.slice(0, -4) + ".source.txt");
-                                    file.write(constance_1.BANNER + getResultRes.data);
-                                    file.end();
-                                    file.on("finish", () => {
-                                        utils_1.log(`源文件成功保存在 ${chalk_1.default.greenBright(filename.slice(0, -4) + ".source.txt")}`);
-                                        bootStrap(--filePathLength);
-                                    });
-                                }
-                            }
-                        }
-                        else if (progressRes.ok === -1) {
-                            clearInterval(timer);
-                            utils_1.err("调用失败了", JSON.stringify(progressRes));
-                        }
-                    }, 5000);
+                if (result.ok === 0) {
+                    utils_1.log("正在获取转码进度", JSON.stringify(result));
+                    if (JSON.parse(result.data)?.status === 9) {
+                        clearInterval(timer);
+                        resolve(result);
+                    }
                 }
+                else {
+                    clearInterval(timer);
+                    utils_1.err("调用失败了", JSON.stringify(result));
+                    reject(JSON.stringify({ ...result, stack: "progress" }));
+                }
+            }, 5000);
+        });
+    };
+    const getResultFn = (data) => {
+        return new Promise(async (resolve, reject) => {
+            const result = await PostRequestData("https://raasr.xfyun.cn/api/getResult", {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            }, {
+                app_id: constance_1.APP_ID,
+                signa: createSign(CURRENT_TIME),
+                ts: CURRENT_TIME,
+                task_id: data,
+            });
+            if (result.ok === 0) {
+                resolve(result);
             }
-        }
+            else {
+                reject(JSON.stringify({ ...result, stack: "result" }));
+            }
+        });
+    };
+    try {
+        const prepareRes = await prepareFn();
+        await uploadFn(prepareRes.data);
+        await mergeFn(prepareRes.data);
+        await getProgressFn(prepareRes.data);
+        const result = await getResultFn(prepareRes.data);
+        fs_1.default.mkdir("xf-audio-source", () => {
+            const file = fs_1.default.createWriteStream(process.cwd() + "/xf-audio-source/" + filename.slice(0, -4) + ".source.txt");
+            file.write(constance_1.BANNER + result.data);
+            file.end();
+            file.on("finish", () => {
+                utils_1.log(`源文件成功保存在 ${chalk_1.default.greenBright(filename.slice(0, -4) + ".source.txt")}`);
+                bootStrap(--filePathLength);
+            });
+        });
     }
     catch (_) {
-        utils_1.err("[PostRequestData]::net Error", _);
+        utils_1.err(_);
     }
 }
 ((filePathLength) => {

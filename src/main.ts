@@ -142,7 +142,7 @@ async function bootStrap(i) {
             if (result.ok === 0) {
                 resolve(result);
             } else {
-                reject({ ...result, stack: "prepare" });
+                reject(JSON.stringify({ ...result, stack: "prepare" }));
             }
         });
     };
@@ -192,7 +192,7 @@ async function bootStrap(i) {
             if (result.ok === 0) {
                 resolve(result);
             } else {
-                reject({ ...result, stack: "upload" });
+                reject(JSON.stringify({ ...result, stack: "upload" }));
             }
         });
     };
@@ -215,7 +215,7 @@ async function bootStrap(i) {
             if (result.ok === 0) {
                 resolve(result);
             } else {
-                reject({ ...result, stack: "merge" });
+                reject(JSON.stringify({ ...result, stack: "merge" }));
             }
         });
     };
@@ -245,7 +245,7 @@ async function bootStrap(i) {
                 } else {
                     clearInterval(timer);
                     err("调用失败了", JSON.stringify(result));
-                    reject({ ...result, stack: "progress" });
+                    reject(JSON.stringify({ ...result, stack: "progress" }));
                 }
             }, 5000);
         });
@@ -268,7 +268,7 @@ async function bootStrap(i) {
             if (result.ok === 0) {
                 resolve(result);
             } else {
-                reject({ ...result, stack: "result" });
+                reject(JSON.stringify({ ...result, stack: "result" }));
             }
         });
     };
@@ -281,11 +281,11 @@ async function bootStrap(i) {
         const result = await getResultFn(prepareRes.data);
 
         fs.mkdir("xf-audio-source", () => {
-            const file = fs.createWriteStream(process.cwd() + "/xf-audio-source/" + filename.slice(0, -4) + ".source.txt");
+            const file = fs.createWriteStream(process.cwd() + "/xf-audio-source/" + filename.slice(0, -4) + ".txt");
             file.write(BANNER + result.data);
             file.end();
             file.on("finish", () => {
-                log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + ".source.txt")}`);
+                log(`源文件成功保存在 ${chalk.greenBright(process.cwd() + "/xf-audio-source/" + filename.slice(0, -4) + ".txt")}`);
                 bootStrap(--filePathLength);
             });
         });
