@@ -113,35 +113,47 @@ async function bootStrap(i) {
     } else {
         log(`恭喜！文件地址合法 当前文件路径 ${chalk.greenBright(audioFilePath)}`);
     }
+
     const CURRENT_TIME = Math.floor(Date.now() / 1000);
     const signa = createSign(CURRENT_TIME);
     const fileLen = fs.statSync(audioFilePath).size;
     const filename = path.basename(audioFilePath);
     const sliceNum = Math.ceil(fileLen / FILE_PIECE_SICE);
-    try {
-        // prepare interface
-        log(`文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(sliceNum)} 次上传`);
-        log(`开始调用前置接口 prepare `);
-        const prepareRes = await PostRequestData(
-            "https://raasr.xfyun.cn/api/prepare",
-            {
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            },
-            {
-                app_id: APP_ID,
-                signa,
-                ts: CURRENT_TIME,
-                file_len: fileLen,
-                file_name: filename,
-                slice_num: sliceNum,
+
+    log(`文件长度 ${chalk.greenBright(fileLen)} 文件名 ${chalk.greenBright(filename)} 分 ${chalk.greenBright(sliceNum)} 次上传`);
+    log(`开始调用前置接口 prepare `);
+
+    const prepareFn = (): Promise<SuccessResponse | FailedResponse> => {
+        return new Promise(async (resolve, reject) => {
+            const result = await PostRequestData(
+                "https://raasr.xfyun.cn/api/prepare",
+                {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+                {
+                    app_id: APP_ID,
+                    signa,
+                    ts: CURRENT_TIME,
+                    file_len: fileLen,
+                    file_name: filename,
+                    slice_num: sliceNum,
+                }
+            );
+            if (result.ok === 0) {
+                resolve(result);
+            } else {
+                reject({ ...result, stack: "prepare" });
             }
-        );
-        if (prepareRes.ok === 0) {
+        });
+    };
+
+    const uploadFn = (data): Promise<SuccessResponse | FailedResponse> => {
+        return new Promise(async (resolve, reject) => {
             log(`调用前置接口成功 prepare 开始调用上传接口 upload`);
             // upload interface
             let start = 0,
                 index = 0;
-            const upload = async (fileLen: number) => {
+            const upload = async (fileLen: number): Promise<SuccessResponse | FailedResponse> => {
                 log(`正在上传 ${chalk.greenBright(`${++index} / ${sliceNum}`)}`);
                 let len = fileLen < FILE_PIECE_SICE ? fileLen : FILE_PIECE_SICE,
                     end = start + len - 1;
@@ -159,7 +171,7 @@ async function bootStrap(i) {
                         app_id: APP_ID,
                         signa,
                         ts: CURRENT_TIME,
-                        task_id: prepareRes.data,
+                        task_id: data,
                         slice_id: sliceIdInstance.getNextSliceId(),
                         content: fileFragment,
                     },
@@ -176,11 +188,44 @@ async function bootStrap(i) {
                     }
                 }
             };
-            const uploadRes: SuccessResponse | FailedResponse = await upload(fileLen);
-            if (uploadRes.ok === 0) {
-                log(`文件上传成功 调用合并接口 merge`);
-                const mergeRes = await PostRequestData(
-                    "https://raasr.xfyun.cn/api/merge",
+            const result = await upload(fileLen);
+            if (result.ok === 0) {
+                resolve(result);
+            } else {
+                reject({ ...result, stack: "upload" });
+            }
+        });
+    };
+
+    const mergeFn = (data): Promise<SuccessResponse | FailedResponse> => {
+        return new Promise(async (resolve, reject) => {
+            log(`文件上传成功 调用合并接口 merge`);
+            const result = await PostRequestData(
+                "https://raasr.xfyun.cn/api/merge",
+                {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+                {
+                    app_id: APP_ID,
+                    signa,
+                    ts: CURRENT_TIME,
+                    task_id: data,
+                }
+            );
+            if (result.ok === 0) {
+                resolve(result);
+            } else {
+                reject({ ...result, stack: "merge" });
+            }
+        });
+    };
+
+    const getProgressFn = (data): Promise<SuccessResponse | FailedResponse> => {
+        return new Promise((resolve, reject) => {
+            log(`合并成功 每 ${chalk.greenBright(5)} 秒 调用进度查询接口 getProgress`);
+            const timer = setInterval(async () => {
+                const result = await PostRequestData(
+                    "https://raasr.xfyun.cn/api/getProgress",
                     {
                         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                     },
@@ -188,63 +233,64 @@ async function bootStrap(i) {
                         app_id: APP_ID,
                         signa,
                         ts: CURRENT_TIME,
-                        task_id: prepareRes.data,
+                        task_id: data,
                     }
                 );
-                if (mergeRes.ok === 0) {
-                    log(`合并成功 每 ${chalk.greenBright(5)} 秒 调用进度查询接口 getProgress`);
-                    const progressFn = async () => {
-                        return await PostRequestData(
-                            "https://raasr.xfyun.cn/api/getProgress",
-                            {
-                                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                            },
-                            {
-                                app_id: APP_ID,
-                                signa,
-                                ts: CURRENT_TIME,
-                                task_id: prepareRes.data,
-                            }
-                        );
-                    };
-                    const timer = setInterval(async () => {
-                        const progressRes: SuccessResponse | FailedResponse = await progressFn();
-                        if (progressRes.ok === 0) {
-                            log("正在获取转码进度", JSON.stringify(progressRes));
-                            if (JSON.parse(progressRes.data)?.status === 9) {
-                                clearInterval(timer);
-                                const getResultRes = await PostRequestData(
-                                    "https://raasr.xfyun.cn/api/getResult",
-                                    {
-                                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                    },
-                                    {
-                                        app_id: APP_ID,
-                                        signa: createSign(CURRENT_TIME),
-                                        ts: CURRENT_TIME,
-                                        task_id: prepareRes.data,
-                                    }
-                                );
-                                if (getResultRes.ok === 0) {
-                                    const file = fs.createWriteStream(filename.slice(0, -4) + ".source.txt");
-                                    file.write(BANNER + getResultRes.data);
-                                    file.end();
-                                    file.on("finish", () => {
-                                        log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + ".source.txt")}`);
-                                        bootStrap(--filePathLength);
-                                    });
-                                }
-                            }
-                        } else if (progressRes.ok === -1) {
-                            clearInterval(timer);
-                            err("调用失败了", JSON.stringify(progressRes));
-                        }
-                    }, 5000);
+                if (result.ok === 0) {
+                    log("正在获取转码进度", JSON.stringify(result));
+                    if (JSON.parse(result.data)?.status === 9) {
+                        clearInterval(timer);
+                        resolve(result);
+                    }
+                } else {
+                    clearInterval(timer);
+                    err("调用失败了", JSON.stringify(result));
+                    reject({ ...result, stack: "progress" });
                 }
+            }, 5000);
+        });
+    };
+
+    const getResultFn = (data): Promise<SuccessResponse | FailedResponse> => {
+        return new Promise(async (resolve, reject) => {
+            const result = await PostRequestData(
+                "https://raasr.xfyun.cn/api/getResult",
+                {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+                {
+                    app_id: APP_ID,
+                    signa: createSign(CURRENT_TIME),
+                    ts: CURRENT_TIME,
+                    task_id: data,
+                }
+            );
+            if (result.ok === 0) {
+                resolve(result);
+            } else {
+                reject({ ...result, stack: "result" });
             }
-        }
+        });
+    };
+
+    try {
+        const prepareRes = await prepareFn();
+        await uploadFn(prepareRes.data);
+        await mergeFn(prepareRes.data);
+        await getProgressFn(prepareRes.data);
+        const result = await getResultFn(prepareRes.data);
+
+        fs.mkdir("xf-audio-source", () => {
+            const file = fs.createWriteStream(process.cwd() + "/xf-audio-source/" + filename.slice(0, -4) + ".source.txt");
+            file.write(BANNER + result.data);
+            file.end();
+            file.on("finish", () => {
+                log(`源文件成功保存在 ${chalk.greenBright(filename.slice(0, -4) + ".source.txt")}`);
+                bootStrap(--filePathLength);
+            });
+        });
     } catch (_) {
-        err("[PostRequestData]::net Error", _);
+        err(_);
     }
 }
 
