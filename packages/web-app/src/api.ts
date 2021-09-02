@@ -1,4 +1,4 @@
-import { FailedResponse, SuccessResponse } from "@root/types/app.config";
+import { FailedResponse, SuccessResponse } from "";
 
 const proxyHost = "http://localhost:3000";
 

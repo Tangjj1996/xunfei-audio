@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@material-ui/core";
-import { getProgress, getResult, merge, prepare, upload } from "@src/api";
+import { getProgress, getResult, merge, prepare, upload } from "./api";
 import CryptoJS from "crypto-js";
-import useSyncCallback from "@src/hooks/useSyncCallback";
-import type { FailedResponse, SuccessResponse } from "@root/types/app.config";
+import useSyncCallback from "./hooks/useSyncCallback";
+import type { FailedResponse, SuccessResponse } from "";
 
 const APP_ID = "41ac2892";
 const SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
