@@ -2,6 +2,9 @@
   "name": "xf-audio",
   "version": "1.0.3",
   "license": "MIT",
+  "bin": {
+    "xf-audio": "dist/main.js"
+  },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
     "name": "tangji",
