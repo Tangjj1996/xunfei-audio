@@ -1,15 +1,7 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "outDir": "build",
-    "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"]
-    },
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
-  },
-  "include": ["src/**/*", "types/**/*"]
+  }
 }
