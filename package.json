@@ -7,9 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "lerna dev",
-    "build": "lerna build",
-    "serve": "lerna serve"
+    "dev": "lerna run dev",
+    "build": "lerna run build",
+    "serve": "lerna run serve"
   },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {

@@ -15,6 +15,7 @@
     "url": "https://github.com/Tangjj1996/xunfei-audio/issues"
   },
   "dependencies": {
+    "chalk": "^4.1.2",
     "crypto-js": "^4.1.1"
   }
 }
