@@ -3,7 +3,7 @@ import { Button } from "@material-ui/core";
 import { getProgress, getResult, merge, prepare, upload } from "./api";
 import CryptoJS from "crypto-js";
 import useSyncCallback from "./hooks/useSyncCallback";
-import type { FailedResponse, SuccessResponse } from "";
+import type { FailedResponse, SuccessResponse } from "@root-types/app";
 
 const APP_ID = "41ac2892";
 const SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
@@ -53,7 +53,7 @@ const App: React.FC = () => {
 
             const prepareFn = (): Promise<SuccessResponse | FailedResponse> => {
                 return new Promise(async (resolve, reject) => {
-                    const result = await prepare({
+                    const result: SuccessResponse | FailedResponse = await prepare({
                         method: "POST",
                         mode: "cors",
                         body: new URLSearchParams({
@@ -88,7 +88,7 @@ const App: React.FC = () => {
                         formData.append("slice_id", sliceIdInstance.getNextSliceId());
                         formData.append("content", curFileListArr[i].slice(start, end < curFileListArr[i].size ? end : curFileListArr[i].size));
 
-                        let result = await upload({
+                        let result: SuccessResponse | FailedResponse = await upload({
                             method: "POST",
                             mode: "cors",
                             body: formData,
@@ -113,7 +113,7 @@ const App: React.FC = () => {
 
             const mergeFn = (data: string): Promise<SuccessResponse | FailedResponse> => {
                 return new Promise(async (resolve, reject) => {
-                    const result = await merge({
+                    const result: SuccessResponse | FailedResponse = await merge({
                         method: "POST",
                         mode: "cors",
                         body: new URLSearchParams({
@@ -134,7 +134,7 @@ const App: React.FC = () => {
             const getProgressFn = (data: string): Promise<SuccessResponse | FailedResponse> => {
                 return new Promise(async (resolve, reject) => {
                     const timer = setInterval(async () => {
-                        const result = await getProgress({
+                        const result: SuccessResponse | FailedResponse = await getProgress({
                             method: "POST",
                             mode: "cors",
                             body: new URLSearchParams({
@@ -159,7 +159,7 @@ const App: React.FC = () => {
 
             const getresultFn = (data: string): Promise<SuccessResponse | FailedResponse> => {
                 return new Promise(async (resolve, reject) => {
-                    const result = await getResult({
+                    const result: SuccessResponse | FailedResponse = await getResult({
                         method: "POST",
                         mode: "cors",
                         body: new URLSearchParams({

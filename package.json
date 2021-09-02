@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "lerna dev",
     "build": "lerna build",
-    "server": "lerna server"
+    "serve": "lerna serve"
   },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
@@ -24,6 +24,7 @@
     "url": "https://github.com/Tangjj1996/xunfei-audio/issues"
   },
   "devDependencies": {
-    "lerna": "^4.0.0"
+    "lerna": "^4.0.0",
+    "typescript": "^4.4.2"
   }
 }
