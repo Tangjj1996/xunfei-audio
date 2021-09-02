@@ -1,5 +1,17 @@
 {
-  "name": "electron",
+  "name": "@xf-audio/electron",
   "version": "1.0.3",
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
+  "author": {
+    "name": "tangji",
+    "email": "awesometangji@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tangjj1996/xunfei-audio"
+  },
+  "bugs": {
+    "url": "https://github.com/Tangjj1996/xunfei-audio/issues"
+  }
 }

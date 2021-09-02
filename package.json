@@ -2,7 +2,6 @@
   "name": "xunfei-audio",
   "version": "1.0.3",
   "license": "MIT",
-  "types": "types/app.config.d.ts",
   "private": true,
   "workspaces": [
     "packages/*"

@@ -1,4 +1,11 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {}
+  "compilerOptions": {
+    "target": "es5",
+    "module": "CommonJS",
+    "baseUrl": ".",
+    "paths": {
+      "@root-types/*": ["../../types/*"]
+    }
+  }
 }

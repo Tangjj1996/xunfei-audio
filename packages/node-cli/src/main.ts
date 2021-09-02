@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import type { FailedResponse, GetProgressFetchUrl, GetResultFetchUrl, MergeFetchUrl, PostDataParam, PrepareFetchUrl, SuccessResponse, UploadFetchUrl } from "../types/app.config";
+import type { FailedResponse, GetProgressFetchUrl, GetResultFetchUrl, MergeFetchUrl, PostDataParam, PrepareFetchUrl, SuccessResponse, UploadFetchUrl } from "@root-types/app";
 import https from "https";
 import type http from "http";
 import crypto from "crypto-js";
