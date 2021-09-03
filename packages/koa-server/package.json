@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/koa": "^2.13.4",
-    "@types/koa-router": "^7.4.4"
+    "@types/koa-router": "^7.4.4",
+    "@types/node-fetch": "^2.5.12"
   }
 }

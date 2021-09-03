@@ -1,0 +1,8 @@
+appId: "com.electron.xf-audio"
+productName: "xf-audio"
+directories:
+  output: "package"
+mac:
+  target: "dmg"
+files:
+  - dist{,/**/*}
