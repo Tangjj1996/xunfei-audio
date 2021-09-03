@@ -2,6 +2,9 @@
   "name": "@xf-audio/koa-server",
   "version": "1.0.5",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc"

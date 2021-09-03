@@ -2,6 +2,9 @@
   "name": "@xf-audio/web-app",
   "version": "1.0.6",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
