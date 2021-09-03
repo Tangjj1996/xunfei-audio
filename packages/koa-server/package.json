@@ -1,6 +1,6 @@
 {
   "name": "@xf-audio/koa-server",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "MIT",
   "main": "dist/server.js",
   "scripts": {
