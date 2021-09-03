@@ -12,7 +12,8 @@
     "build": "lerna run build",
     "serve": "lerna run serve",
     "electron": "lerna run electron",
-    "electron:builder": "lerna run electron:builder"
+    "electron:builder": "lerna run electron:builder",
+    "publish": "lerna publish"
   },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
