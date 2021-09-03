@@ -4,7 +4,19 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "electron": "tsc && electron dist/app.js"
+    "electron": "tsc && electron dist/app.js",
+    "pack": "electron-builder"
+  },
+  "build": {
+    "appId": "com.electron.xf-audio",
+    "productName": "xf-audio",
+    "copyright": "Copyright © 2021 tangji",
+    "directories": {
+      "buildResources": "dist"
+    },
+    "mac": {
+      "target": "dmg"
+    }
   },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
