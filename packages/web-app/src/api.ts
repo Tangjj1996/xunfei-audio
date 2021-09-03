@@ -1,6 +1,6 @@
-import { FailedResponse, SuccessResponse } from "";
+import { FailedResponse, SuccessResponse } from "@root-types/app";
 
-const proxyHost = "http://localhost:3000";
+const proxyHost = "https://xunfei-audio.vercel.app";
 
 export const prepare = <T extends SuccessResponse | FailedResponse, U extends RequestInit>(options: U): Promise<T> =>
     fetch(`${proxyHost}/api/prepare`, options).then((res) => {
