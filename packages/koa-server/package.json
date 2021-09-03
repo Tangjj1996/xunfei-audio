@@ -29,6 +29,5 @@
     "@types/koa": "^2.13.4",
     "@types/koa-router": "^7.4.4",
     "@types/node-fetch": "^2.5.12"
-  },
-  "gitHead": "73d9a00490d969b1ea78e15d34f93c3ab2e4fd00"
+  }
 }
