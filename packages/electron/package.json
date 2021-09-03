@@ -23,5 +23,6 @@
   "devDependencies": {
     "electron": "^14.0.0",
     "electron-builder": "^22.11.7"
-  }
+  },
+  "gitHead": "73d9a00490d969b1ea78e15d34f93c3ab2e4fd00"
 }
