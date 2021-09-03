@@ -5,6 +5,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "bin": {
     "xf-audio": "dist/main.js"
   },

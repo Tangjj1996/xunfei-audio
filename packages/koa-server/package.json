@@ -6,6 +6,9 @@
     "access": "public"
   },
   "main": "dist/server.js",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsc"
   },

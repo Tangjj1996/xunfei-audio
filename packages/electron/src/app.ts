@@ -15,7 +15,7 @@ const createWindow = () => {
             },
         });
         try {
-            await window.loadURL("http://localhost:8080");
+            await window.loadURL("https://xunfei-audio.vercel.app/");
             await server();
             resolve(successRes);
         } catch (_) {
