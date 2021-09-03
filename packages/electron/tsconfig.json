@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@xf-audio/koa-server": ["../koa-server"]
+    }
+  },
+  "include": ["src/**/*"]
+}
