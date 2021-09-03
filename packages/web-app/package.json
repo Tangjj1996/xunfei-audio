@@ -1,6 +1,6 @@
 {
   "name": "@xf-audio/web-app",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

@@ -5,6 +5,9 @@
   "bin": {
     "xf-audio": "dist/main.js"
   },
+  "scripts": {
+    "build": "tsc"
+  },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
     "name": "tangji",
