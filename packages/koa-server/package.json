@@ -2,6 +2,7 @@
   "name": "@xf-audio/koa-server",
   "version": "1.0.0",
   "license": "MIT",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc"
   },
@@ -23,5 +24,9 @@
     "koa-body": "^4.2.0",
     "koa-router": "^10.1.1",
     "node-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.13.4",
+    "@types/koa-router": "^7.4.4"
   }
 }

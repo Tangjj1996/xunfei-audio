@@ -1,4 +1,5 @@
 const { BrowserWindow, app } = require("electron");
+const server = require("@xf-audio/koa-server");
 
 const successRes = {
   ok: 0,
@@ -9,9 +10,13 @@ const createWindow = () => {
     const window = new BrowserWindow({
       width: 1200,
       height: 800,
+      webPreferences: {
+        nativeWindowOpen: true,
+      },
     });
     try {
-      await window.loadURL("https://www.baidu.com");
+      await window.loadURL("https://www.badidu.com");
+      await server();
       resolve(successRes);
     } catch (_) {
       reject(_);
@@ -20,5 +25,9 @@ const createWindow = () => {
 };
 
 app.on("ready", async () => {
-  await createWindow();
+  try {
+    await createWindow();
+  } catch (_) {
+    console.error(_);
+  }
 });
