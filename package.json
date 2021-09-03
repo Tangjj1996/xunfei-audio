@@ -3,15 +3,16 @@
   "version": "1.0.3",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": ["packages/*"],
+    "nohoist": ["**/electron", "**/electron/**"]
+  },
   "scripts": {
     "dev": "lerna run dev",
     "build": "lerna run build",
     "serve": "lerna run serve",
     "electron": "lerna run electron",
-    "pack": "lerna run pack"
+    "electron:builder": "lerna run electron:builder"
   },
   "homepage": "https://github.com/Tangjj1996/xunfei-audio#readme",
   "author": {
