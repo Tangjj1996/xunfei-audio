@@ -1,7 +1,7 @@
 appId: "com.electron.xf-audio"
 productName: "xf-audio"
 directories:
-  output: "package"
+  output: "${name}-${version}"
 mac:
   target: "dmg"
 files:
