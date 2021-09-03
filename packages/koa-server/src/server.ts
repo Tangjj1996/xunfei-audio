@@ -5,6 +5,7 @@ import Router from "koa-router";
 import koaBody from "koa-body";
 import FormData from "form-data";
 import fs from "fs";
+import url from "url";
 
 const app = new Koa();
 const router = new Router();
@@ -37,7 +38,7 @@ export function server() {
                     }
                 }
                 const rawFetchRes = await fetch(proxyConfig[key], {
-                    body: isMutipart ? formData : new URLSearchParams(ctx.request.body),
+                    body: isMutipart ? formData : new url.URLSearchParams(ctx.request.body),
                     method: "POST",
                 });
                 const jsonFetchRes = await rawFetchRes.json();

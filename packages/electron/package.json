@@ -24,5 +24,8 @@
   "devDependencies": {
     "electron": "^14.0.0",
     "electron-builder": "^22.11.7"
+  },
+  "dependencies": {
+    "@xf-audio/koa-server": "^1.0.7"
   }
 }

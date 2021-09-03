@@ -1,5 +1,5 @@
 import { BrowserWindow, app } from "electron";
-import server from "@xf-audio/koa-server";
+import { server } from "@xf-audio/koa-server";
 
 const successRes = {
     ok: 0,
