@@ -9,7 +9,7 @@ import fs from "fs";
 const app = new Koa();
 const router = new Router();
 
-module.exports = function server() {
+export function server() {
     return new Promise((resolve, reject) => {
         app.use(async (ctx, next) => {
             ctx.set("Access-Control-Allow-Origin", ctx.req.headers.origin);
@@ -53,4 +53,4 @@ module.exports = function server() {
             console.log("listener on 3000 successfully");
         });
     });
-};
+}
