@@ -1,6 +1,6 @@
 {
   "name": "@xf-audio/electron",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "license": "MIT",
   "private": true,
   "main": "dist/app.js",
