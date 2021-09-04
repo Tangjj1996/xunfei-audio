@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { Button } from "@material-ui/core";
+import { Button, Box, List, ListItem, LinearProgress } from "@material-ui/core";
+import clsx from "clsx";
 import { getProgress, getResult, merge, prepare, upload } from "@api";
 import CryptoJS from "crypto-js";
 import useSyncCallback from "@hooks/useSyncCallback";
 import type { FailedResponse, SuccessResponse } from "@root-types/app";
+import classes from "./index.module.css";
+import BorderDash from "./borderDash";
 
 const APP_ID = "41ac2892";
 const SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
@@ -218,11 +221,27 @@ const XfTransform: React.FC = () => {
     };
 
     return (
-        <>
-            <Button variant="contained" onClick={() => handleClick()} disabled={isDisabled}>
-                上传文件
-            </Button>
-        </>
+        <Box className={clsx(classes.content)}>
+            <Box className={clsx(classes["contetn-box"])}>
+                <BorderDash>
+                    <Button disabled>拖拽上传</Button>
+                </BorderDash>
+                <Button style={{ marginTop: 20 }} variant="contained" color="primary" onClick={() => handleClick()} disabled={isDisabled}>
+                    上传文件
+                </Button>
+            </Box>
+            <List>
+                {fileList &&
+                    fileList.map((item) =>
+                        Array.from(item).map((file, index) => (
+                            <ListItem key={index}>
+                                {file.name}
+                                <LinearProgress variant="determinate"></LinearProgress>
+                            </ListItem>
+                        ))
+                    )}
+            </List>
+        </Box>
     );
 };
 

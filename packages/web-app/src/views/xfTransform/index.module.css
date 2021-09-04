@@ -1,0 +1,28 @@
+.content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.contetn-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-box__boder {
+  display: flex;
+  width: 300px;
+  height: 300px;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-box__boder--enter {
+  border: 2px dashed red;
+}
+.content-bo__boder--leave {
+  border: 2px dashed #d8d8d8;
+}

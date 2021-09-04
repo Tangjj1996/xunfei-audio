@@ -7,9 +7,20 @@
 .app-left {
   width: 160px;
   height: 100%;
+  transition: width 0.3s;
+}
+
+@media screen and (max-width: 1200px) {
+  .app-left {
+    width: 80px;
+  }
 }
 
 .app-right {
   flex: 1;
   height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }

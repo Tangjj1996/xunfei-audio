@@ -1,7 +1,13 @@
 import React from "react";
+import classes from "./index.module.css";
+import { Typography, Box } from "@material-ui/core";
 
 const Footer = () => {
-    return <div>This is Footer List</div>;
+    return (
+        <Box className={classes.footer}>
+            <Typography>This is Footer List</Typography>
+        </Box>
+    );
 };
 
 export default Footer;
