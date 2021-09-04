@@ -1,0 +1,15 @@
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.app-left {
+  width: 160px;
+  height: 100%;
+}
+
+.app-right {
+  flex: 1;
+  height: 100%;
+}
