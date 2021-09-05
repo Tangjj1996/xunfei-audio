@@ -7,18 +7,7 @@ import useSyncCallback from "@hooks/useSyncCallback";
 import type { FailedResponse, SuccessResponse } from "@root-types/app";
 import classes from "./index.module.css";
 import BorderDash from "./borderDash";
-
-const APP_ID = "41ac2892";
-const SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
-const FILE_PIECE_SICE = 1024 * 1024;
-
-const createSign = (ts: number): string => {
-    let md5 = CryptoJS.MD5(APP_ID + ts).toString();
-    let sha1 = CryptoJS.HmacSHA1(md5, SECRET_KEY);
-    let sign = CryptoJS.enc.Base64.stringify(sha1);
-    return sign;
-};
-
+import { useContextStore } from "@hooks/useStore";
 class SliceIdGenerator {
     constructor(public __ch = "") {
         this.__ch = "aaaaaaaaa`";
@@ -46,9 +35,19 @@ const XfTransform: React.FC = () => {
     const [fileList, setFileList] = useState<FileList[] | null>(null);
     const [curFileList, setCurFileList] = useState<FileList>(null);
     const [isDisabled, setDisabled] = useState(false);
+    const [store] = useContextStore();
 
     const stateSyncFn = useSyncCallback(async () => {
         const curFileListArr = Array.from(curFileList);
+        const { APP_ID, SECRET_KEY, FILE_PIECE_SIZE } = store.config;
+
+        const createSign = (ts: number): string => {
+            let md5 = CryptoJS.MD5(APP_ID + ts).toString();
+            let sha1 = CryptoJS.HmacSHA1(md5, SECRET_KEY);
+            let sign = CryptoJS.enc.Base64.stringify(sha1);
+            return sign;
+        };
+
         for (let i = 0; i < curFileListArr.length; i++) {
             const time = Math.floor(Date.now() / 1000);
             const signa = createSign(time);
@@ -65,7 +64,7 @@ const XfTransform: React.FC = () => {
                             ts: String(time),
                             file_len: String(curFileList[i].size),
                             file_name: curFileList[i].name,
-                            slice_num: String(Math.ceil(curFileList[i].size / FILE_PIECE_SICE)),
+                            slice_num: String(Math.ceil(curFileList[i].size / FILE_PIECE_SIZE)),
                         }),
                     });
                     if (result.ok === 0) {
@@ -80,10 +79,10 @@ const XfTransform: React.FC = () => {
                 return new Promise(async (resolve, reject) => {
                     let start = 0;
                     const loopUpload = async (): Promise<SuccessResponse | FailedResponse> => {
-                        const fileLen = curFileListArr[i].size < FILE_PIECE_SICE ? curFileListArr[i].size : FILE_PIECE_SICE;
+                        const fileLen = curFileListArr[i].size < FILE_PIECE_SIZE ? curFileListArr[i].size : FILE_PIECE_SIZE;
                         const end = start + fileLen;
                         const formData = new FormData();
-                        console.log(`fileLen:: ${curFileListArr[i].size} FILE_PIECE_SICE:: ${FILE_PIECE_SICE} start:: ${start} end:: ${end}`);
+
                         formData.append("app_id", APP_ID);
                         formData.append("ts", String(time));
                         formData.append("signa", createSign(time));
@@ -99,7 +98,7 @@ const XfTransform: React.FC = () => {
 
                         start = end;
 
-                        if (end > FILE_PIECE_SICE) {
+                        if (end > FILE_PIECE_SIZE) {
                             return result;
                         } else {
                             return await loopUpload();
@@ -236,7 +235,7 @@ const XfTransform: React.FC = () => {
                         Array.from(item).map((file, index) => (
                             <ListItem key={index}>
                                 {file.name}
-                                <LinearProgress variant="determinate"></LinearProgress>
+                                <LinearProgress variant="determinate" value={100} style={{ width: 110 }}></LinearProgress>
                             </ListItem>
                         ))
                     )}

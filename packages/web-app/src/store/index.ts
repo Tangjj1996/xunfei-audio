@@ -1,7 +1,13 @@
-import AppConfig from "./appConfig";
+import configStore, { AppConfig } from "./appConfig";
 
-const store = {
-    AppConfig,
+const config = new configStore();
+
+export interface StoreType {
+    config: AppConfig;
+}
+
+const store: StoreType = {
+    config,
 };
 
 export default store;
