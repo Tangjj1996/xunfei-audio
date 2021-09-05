@@ -5,7 +5,7 @@ import { getProgress, getResult, merge, prepare, upload } from "@api";
 import CryptoJS from "crypto-js";
 import useSyncCallback from "@hooks/useSyncCallback";
 import type { FailedResponse, SuccessResponse } from "@root-types/app";
-import classes from "./index.module.css";
+import classes from "./xftransform.module.css";
 import BorderDash from "./borderDash";
 import { useContextStore } from "@hooks/useStore";
 class SliceIdGenerator {
@@ -234,8 +234,11 @@ const XfTransform: React.FC = () => {
                     fileList.map((item) =>
                         Array.from(item).map((file, index) => (
                             <ListItem key={index}>
-                                {file.name}
+                                <Box>{file.name}</Box>
                                 <LinearProgress variant="determinate" value={100} style={{ width: 110 }}></LinearProgress>
+                                <Button variant="contained" onClick={() => {}}>
+                                    预览
+                                </Button>
                             </ListItem>
                         ))
                     )}

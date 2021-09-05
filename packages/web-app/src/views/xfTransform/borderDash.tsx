@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import clsx from "clsx";
 import { Box } from "@material-ui/core";
-import classes from "./index.module.css";
+import classes from "./xftransform.module.css";
 
 interface Props {}
 

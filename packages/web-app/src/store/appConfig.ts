@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx";
 
-export interface AppConfig {
+export interface ConfigType {
     APP_ID: string;
     SECRET_KEY: string;
     FILE_PIECE_SIZE: number;
@@ -10,7 +10,7 @@ export interface AppConfig {
     changeFilePieceSize: (val: number) => void;
 }
 
-class configStore implements AppConfig {
+class ConfigStore implements ConfigType {
     APP_ID = "41ac2892";
     SECRET_KEY = "476dbac45bca3f32bba334f702e3bc4f";
     FILE_PIECE_SIZE = 1024 * 1024;
@@ -32,4 +32,4 @@ class configStore implements AppConfig {
     }
 }
 
-export default configStore;
+export default ConfigStore;

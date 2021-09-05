@@ -1,9 +1,9 @@
-import configStore, { AppConfig } from "./appConfig";
+import ConfigStore, { ConfigType } from "./appConfig";
 
-const config = new configStore();
+const config = new ConfigStore();
 
 export interface StoreType {
-    config: AppConfig;
+    config: ConfigType;
 }
 
 const store: StoreType = {
