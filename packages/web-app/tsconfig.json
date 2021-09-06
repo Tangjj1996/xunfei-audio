@@ -10,7 +10,8 @@
       "@root-types/*": ["../../types/*"],
       "@api": ["./src/api"],
       "@hooks/*": ["./src/hooks/*"],
-      "@store": ["./src/store"]
+      "@store": ["./src/store"],
+      "@components/*": ["./src/components/*"]
     }
   }
 }

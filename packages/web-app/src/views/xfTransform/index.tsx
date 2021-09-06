@@ -8,6 +8,7 @@ import type { FailedResponse, SuccessResponse } from "@root-types/app";
 import classes from "./xftransform.module.css";
 import BorderDash from "./borderDash";
 import { useContextStore } from "@hooks/useStore";
+import Preview from "@components/preview";
 class SliceIdGenerator {
     constructor(public __ch = "") {
         this.__ch = "aaaaaaaaa`";
@@ -185,19 +186,7 @@ const XfTransform: React.FC = () => {
                 await mergeFn(resultPrepare.data);
                 await getProgressFn(resultPrepare.data);
                 const resultGetResult = await getresultFn(resultPrepare.data);
-                /**
-                 * @description download
-                 */
-                const aLink = document.createElement("a") as HTMLAnchorElement;
-                const body = document.querySelector("body");
-                const fileBlob = new Blob([resultGetResult.data]);
-                aLink.href = window.URL.createObjectURL(fileBlob);
-                aLink.download = "audio_to_file.txt";
-                aLink.style.display = "none";
-                body.appendChild(aLink);
-                aLink.click();
-                body.removeChild(aLink);
-                window.URL.revokeObjectURL(aLink.href);
+                store.preview.changePreviewData(resultGetResult.data);
             } catch (_) {
                 console.error(_);
             }
@@ -236,13 +225,19 @@ const XfTransform: React.FC = () => {
                             <ListItem key={index}>
                                 <Box>{file.name}</Box>
                                 <LinearProgress variant="determinate" value={100} style={{ width: 110 }}></LinearProgress>
-                                <Button variant="contained" onClick={() => {}}>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => {
+                                        store.preview.changeOpen(true);
+                                    }}
+                                >
                                     预览
                                 </Button>
                             </ListItem>
                         ))
                     )}
             </List>
+            <Preview></Preview>
         </Box>
     );
 };

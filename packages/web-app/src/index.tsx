@@ -7,10 +7,8 @@ import store from "@store";
 import "./index.css";
 
 ReactDOM.render(
-    <React.StrictMode>
-        <StoreContext store={store}>
-            <App />
-        </StoreContext>
-    </React.StrictMode>,
+    <StoreContext store={store}>
+        <App />
+    </StoreContext>,
     document.getElementById("root")
 );
