@@ -1,6 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Typography, Box } from "@material-ui/core";
+import { Typography, MenuList, MenuItem, ListItemIcon } from "@material-ui/core";
+import { Drafts } from "@material-ui/icons";
+import clsx from "clsx";
+import classes from "./menu.module.css";
 
 interface Props {
     className: string;
@@ -8,11 +11,16 @@ interface Props {
 
 const MenuWrap: React.FC<Props> = ({ className }) => {
     return (
-        <Box className={className}>
+        <MenuList className={clsx([className, classes.menu])}>
             <Link to="/transform">
-                <Typography>转写服务</Typography>
+                <MenuItem>
+                    <ListItemIcon>
+                        <Drafts />
+                    </ListItemIcon>
+                    <Typography>转写服务</Typography>
+                </MenuItem>
             </Link>
-        </Box>
+        </MenuList>
     );
 };
 

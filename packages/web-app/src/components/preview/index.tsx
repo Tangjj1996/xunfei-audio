@@ -1,5 +1,5 @@
-import React from "react";
-import { Dialog, DialogContent, DialogContentText, DialogTitle } from "@material-ui/core";
+import React, { MouseEvent, useState } from "react";
+import { Dialog, DialogContent, DialogContentText, DialogTitle, Menu, MenuItem } from "@material-ui/core";
 import { useContextStore } from "@hooks/useStore";
 import { observer } from "mobx-react-lite";
 
@@ -18,6 +18,11 @@ interface DataType {
     wp?: "n" | "r" | "d" | "m" | "s" | "t" | "p" | "g";
 }
 
+const initialPos = {
+    mouseX: null,
+    mouseY: null,
+};
+
 const TextView = (props: { data: DataType[] }) => {
     return (
         <>
@@ -30,14 +35,38 @@ const TextView = (props: { data: DataType[] }) => {
 
 const Preview = observer(() => {
     const [store] = useContextStore();
+    const [pos, setPos] = useState<{ mouseX: null | number; mouseY: null | number }>(initialPos);
 
+    const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setPos({
+            mouseX: event.clientX - 2,
+            mouseY: event.clientY - 4,
+        });
+    };
+
+    const handleClose = () => {
+        setPos(initialPos);
+    };
     return (
         <Dialog open={store.preview.isOpen} onClose={() => store.preview.changeOpen(false)} scroll="paper">
             <DialogTitle>文档</DialogTitle>
             <DialogContent dividers={true}>
-                <DialogContentText>
+                <DialogContentText onContextMenu={handleClick}>
                     <TextView data={store.preview.previewDataJson}></TextView>
                 </DialogContentText>
+                <Menu
+                    keepMounted
+                    open={pos.mouseX !== null}
+                    onClose={handleClose}
+                    anchorReference="anchorPosition"
+                    anchorPosition={pos.mouseX !== null && pos.mouseY !== null ? { top: pos.mouseY, left: pos.mouseX } : undefined}
+                >
+                    <MenuItem onClick={handleClose}>复制</MenuItem>
+                    <MenuItem onClick={handleClose}>打印</MenuItem>
+                    <MenuItem onClick={handleClose}>高亮</MenuItem>
+                    <MenuItem onClick={handleClose}>邮件</MenuItem>
+                </Menu>
             </DialogContent>
         </Dialog>
     );

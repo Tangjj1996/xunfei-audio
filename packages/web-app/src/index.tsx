@@ -6,6 +6,11 @@ import store from "@store";
 
 import "./index.css";
 
+// 禁用右键
+document.oncontextmenu = (e) => {
+    e.preventDefault();
+};
+
 ReactDOM.render(
     <StoreContext store={store}>
         <App />
