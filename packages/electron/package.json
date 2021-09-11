@@ -1,6 +1,6 @@
 {
   "name": "@xf-audio/electron",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "license": "MIT",
   "private": true,
   "main": "dist/app.js",
@@ -26,6 +26,6 @@
     "electron-builder": "^22.11.7"
   },
   "dependencies": {
-    "@xf-audio/koa-server": "^1.0.7"
+    "@xf-audio/koa-server": "^1.0.8"
   }
 }
