@@ -1,5 +1,5 @@
 import React, { MouseEvent, useState } from "react";
-import { Dialog, DialogContent, DialogContentText, DialogTitle, Menu, MenuItem } from "@material-ui/core";
+import { Button, Dialog, DialogContent, DialogContentText, DialogTitle, Menu, MenuItem } from "@material-ui/core";
 import { useContextStore } from "@hooks/useStore";
 import { observer } from "mobx-react-lite";
 
@@ -50,7 +50,7 @@ const Preview = observer(() => {
     };
     return (
         <Dialog open={store.preview.isOpen} onClose={() => store.preview.changeOpen(false)} scroll="paper">
-            <DialogTitle>文档</DialogTitle>
+            <DialogTitle>转写文档（右键操作）</DialogTitle>
             <DialogContent dividers={true}>
                 <DialogContentText onContextMenu={handleClick}>
                     <TextView data={store.preview.previewDataJson}></TextView>
@@ -65,9 +65,10 @@ const Preview = observer(() => {
                     <MenuItem onClick={handleClose}>复制</MenuItem>
                     <MenuItem onClick={handleClose}>打印</MenuItem>
                     <MenuItem onClick={handleClose}>高亮</MenuItem>
-                    <MenuItem onClick={handleClose}>邮件</MenuItem>
+                    <MenuItem onClick={handleClose}>分享</MenuItem>
                 </Menu>
             </DialogContent>
+            <Button color="primary">编辑</Button>
         </Dialog>
     );
 });
