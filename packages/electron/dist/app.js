@@ -43,7 +43,7 @@ var successRes = {
 };
 var createWindow = function () {
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var window, _1;
+        var window;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -54,28 +54,20 @@ var createWindow = function () {
                             nativeWindowOpen: true,
                         },
                     });
-                    _a.label = 1;
+                    return [4 /*yield*/, (0, koa_server_1.server)()];
                 case 1:
-                    _a.trys.push([1, 4, , 5]);
-                    return [4 /*yield*/, window.loadURL("https://xunfei-audio.vercel.app/")];
+                    _a.sent();
+                    return [4 /*yield*/, window.loadURL("https://xunfei-audio.vercel.app")];
                 case 2:
                     _a.sent();
-                    return [4 /*yield*/, (0, koa_server_1.server)()];
-                case 3:
-                    _a.sent();
                     resolve(successRes);
-                    return [3 /*break*/, 5];
-                case 4:
-                    _1 = _a.sent();
-                    reject(_1);
-                    return [3 /*break*/, 5];
-                case 5: return [2 /*return*/];
+                    return [2 /*return*/];
             }
         });
     }); });
 };
 electron_1.app.on("ready", function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _2;
+    var _1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -85,8 +77,8 @@ electron_1.app.on("ready", function () { return __awaiter(void 0, void 0, void 0
                 _a.sent();
                 return [3 /*break*/, 3];
             case 2:
-                _2 = _a.sent();
-                console.error(_2);
+                _1 = _a.sent();
+                console.error(_1);
                 return [3 /*break*/, 3];
             case 3: return [2 /*return*/];
         }

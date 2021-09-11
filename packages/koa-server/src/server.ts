@@ -6,12 +6,16 @@ import koaBody from "koa-body";
 import FormData from "form-data";
 import fs from "fs";
 import url from "url";
+import staticServe from "koa-static";
+import path from "path";
 
 const app = new Koa();
 const router = new Router();
 
 export function server() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        app.use(staticServe(path.resolve(__dirname, "../static")));
+
         app.use(async (ctx, next) => {
             ctx.set("Access-Control-Allow-Origin", ctx.req.headers.origin);
             ctx.set("Access-Control-Allow-Headers", "Content-Type, Content-Length");

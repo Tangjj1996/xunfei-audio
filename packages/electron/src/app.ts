@@ -14,13 +14,9 @@ const createWindow = () => {
                 nativeWindowOpen: true,
             },
         });
-        try {
-            await window.loadURL("https://xunfei-audio.vercel.app/");
-            await server();
-            resolve(successRes);
-        } catch (_) {
-            reject(_);
-        }
+        await server();
+        await window.loadURL("https://xunfei-audio.vercel.app");
+        resolve(successRes);
     });
 };
 

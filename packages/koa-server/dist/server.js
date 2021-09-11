@@ -48,11 +48,14 @@ var koa_body_1 = __importDefault(require("koa-body"));
 var form_data_1 = __importDefault(require("form-data"));
 var fs_1 = __importDefault(require("fs"));
 var url_1 = __importDefault(require("url"));
+var koa_static_1 = __importDefault(require("koa-static"));
+var path_1 = __importDefault(require("path"));
 var app = new koa_1.default();
 var router = new koa_router_1.default();
 function server() {
     var _this = this;
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
+        app.use((0, koa_static_1.default)(path_1.default.resolve(__dirname, "../static")));
         app.use(function (ctx, next) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
