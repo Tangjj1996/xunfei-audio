@@ -5,7 +5,7 @@ import { Typography, Box } from "@material-ui/core";
 const Footer = () => {
     return (
         <Box className={classes.footer}>
-            <Typography>This is Footer List</Typography>
+            <Typography color="textPrimary">@tangji 2021-present</Typography>
         </Box>
     );
 };
